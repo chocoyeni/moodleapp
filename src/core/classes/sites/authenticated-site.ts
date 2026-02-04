@@ -1331,7 +1331,7 @@ export class CoreAuthenticatedSite extends CoreUnauthenticatedSite {
                 docsUrl = docsUrl.replace('https://docs.moodle.org/', `https://docs.moodle.org/${version}/`);
             }
         }
-
+        docsUrl = 'https://hsk.aum.edu.vn/';
         try {
             // Remove this part of the function if this file only uses CoreLang here.
             let lang = CoreLang.getCurrentLanguageSync(CoreLangFormat.LMS);

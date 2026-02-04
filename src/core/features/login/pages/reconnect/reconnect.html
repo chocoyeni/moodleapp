@@ -36,9 +36,9 @@
                     <div class="core-login-site">
                         <core-site-logo siteNameMode="p" [showLogo]="!showUserAvatar" [site]="site" />
 
-                        @if (displaySiteUrl) {
+                        <!-- @if (displaySiteUrl) {
                             <p class="core-siteurl">{{site.siteUrl}}</p>
-                        }
+                        } -->
                     </div>
 
                     <div class="core-login-user">
@@ -124,8 +124,8 @@
     }
 
     <!-- Additional Login methods -->
-    @if (siteConfig) {
+    <!-- @if (siteConfig) {
         <core-login-methods [site]="site" [siteConfig]="siteConfig" [siteUrl]="site.siteUrl" [redirectData]="redirectData"
             [showLoginForm]="showLoginForm" />
-    }
+    } -->
 </ng-template>
