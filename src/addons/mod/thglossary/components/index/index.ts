@@ -13,46 +13,48 @@
 // limitations under the License.
 
 import { ContextLevel } from '@/core/constants';
-import { AfterViewInit, Component, OnDestroy, OnInit, viewChild, inject } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, OnInit, Optional, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CoreListItemsManager } from '@classes/items-management/list-items-manager';
 import { CoreRoutedItemsManagerSourcesTracker } from '@classes/items-management/routed-items-manager-sources-tracker';
 import { CorePromisedValue } from '@classes/promised-value';
 import { CoreSplitViewComponent } from '@components/split-view/split-view';
 import { CoreCourseModuleMainActivityComponent } from '@features/course/classes/main-activity-component';
+import CoreCourseContentsPage from '@features/course/pages/contents/contents';
 import { CoreCourse } from '@features/course/services/course';
 import { CoreRatingProvider } from '@features/rating/services/rating';
 import { CoreRatingOffline } from '@features/rating/services/rating-offline';
 import { CoreRatingSyncProvider } from '@features/rating/services/rating-sync';
+import { IonContent } from '@ionic/angular';
 import { CoreNavigator } from '@services/navigator';
 import { CoreSites } from '@services/sites';
 import { CoreText } from '@singletons/text';
 import { Translate } from '@singletons';
 import { CoreEventObserver, CoreEvents } from '@singletons/events';
 import {
-    AddonModGlossaryEntriesSource,
-    AddonModGlossaryEntryItem,
-    AddonModGlossaryFetchMode,
-} from '../../classes/glossary-entries-source';
+    AddonModThGlossaryEntriesSource,
+    AddonModThGlossaryEntryItem,
+    AddonModThGlossaryFetchMode,
+} from '../../classes/thglossary-entries-source';
 import {
-    AddonModGlossary,
-    AddonModGlossaryEntry,
-    AddonModGlossaryEntryWithCategory,
-    AddonModGlossaryGlossary,
-} from '../../services/glossary';
-import { AddonModGlossaryOfflineEntry } from '../../services/glossary-offline';
+    AddonModThGlossary,
+    AddonModThGlossaryEntry,
+    AddonModThGlossaryEntryWithCategory,
+    AddonModThGlossaryGlossary,
+} from '../../services/thglossary';
+import { AddonModThGlossaryOfflineEntry } from '../../services/thglossary-offline';
 import {
-    AddonModGlossaryAutoSyncedData,
-    AddonModGlossarySyncResult,
-} from '../../services/glossary-sync';
-import { AddonModGlossaryPrefetchHandler } from '../../services/handlers/prefetch';
+    AddonModThGlossaryAutoSyncedData,
+    AddonModThGlossarySyncResult,
+} from '../../services/thglossary-sync';
+import { AddonModThGlossaryPrefetchHandler } from '../../services/handlers/prefetch';
 import { CoreTime } from '@singletons/time';
 import {
-    ADDON_MOD_GLOSSARY_COMPONENT_LEGACY,
-    ADDON_MOD_GLOSSARY_ENTRY_ADDED,
-    ADDON_MOD_GLOSSARY_ENTRY_DELETED,
-    ADDON_MOD_GLOSSARY_ENTRY_UPDATED,
-    ADDON_MOD_GLOSSARY_PAGE_NAME,
+    ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY,
+    ADDON_MOD_TH_GLOSSARY_ENTRY_ADDED,
+    ADDON_MOD_TH_GLOSSARY_ENTRY_DELETED,
+    ADDON_MOD_TH_GLOSSARY_ENTRY_UPDATED,
+    ADDON_MOD_TH_GLOSSARY_PAGE_NAME,
     GLOSSARY_AUTO_SYNCED,
 } from '../../constants';
 import { CorePopovers } from '@services/overlays/popovers';
@@ -66,9 +68,10 @@ import { CoreSharedModule } from '@/core/shared.module';
  * Component that displays a glossary entry page.
  */
 @Component({
-    selector: 'addon-mod-glossary-index',
-    templateUrl: 'addon-mod-glossary-index.html',
+    selector: 'addon-mod-th-glossary-index',
+    templateUrl: 'addon-mod-th-glossary-index.html',
     styleUrl: 'index.scss',
+    standalone: true,
     imports: [
         CoreSharedModule,
         CoreSearchBoxComponent,
@@ -76,46 +79,48 @@ import { CoreSharedModule } from '@/core/shared.module';
         CoreCourseModuleNavigationComponent,
     ],
 })
-export class AddonModGlossaryIndexComponent extends CoreCourseModuleMainActivityComponent
+export class AddonModThGlossaryIndexComponent extends CoreCourseModuleMainActivityComponent
     implements OnInit, AfterViewInit, OnDestroy {
 
-    readonly splitView = viewChild.required(CoreSplitViewComponent);
+    @ViewChild(CoreSplitViewComponent) splitView!: CoreSplitViewComponent;
 
-    component = ADDON_MOD_GLOSSARY_COMPONENT_LEGACY;
-    pluginName = 'glossary';
+    component = ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY;
+    pluginName = 'thglossary';
 
     canAdd = false;
     loadMoreError = false;
     loadingMessage: string;
-    promisedEntries: CorePromisedValue<AddonModGlossaryEntriesManager>;
-
-    route = inject(ActivatedRoute);
+    promisedEntries: CorePromisedValue<AddonModThGlossaryEntriesManager>;
 
     protected hasOfflineEntries = false;
     protected hasOfflineRatings = false;
     protected syncEventName = GLOSSARY_AUTO_SYNCED;
     protected fetchedEntriesCanLoadMore = false;
-    protected fetchedEntries: AddonModGlossaryEntry[] = [];
+    protected fetchedEntries: AddonModThGlossaryEntry[] = [];
     protected sourceUnsubscribe?: () => void;
     protected observers?: CoreEventObserver[];
     protected checkCompletionAfterLog = false; // Use CoreListItemsManager log system instead.
     protected logSearch?: () => void;
 
-    getDivider?: (entry: AddonModGlossaryEntry) => string;
-    showDivider: (entry: AddonModGlossaryEntry, previous?: AddonModGlossaryEntry) => boolean = () => false;
+    getDivider?: (entry: AddonModThGlossaryEntry) => string;
+    showDivider: (entry: AddonModThGlossaryEntry, previous?: AddonModThGlossaryEntry) => boolean = () => false;
 
-    constructor() {
+    constructor(
+        public route: ActivatedRoute,
+        protected content: IonContent,
+        @Optional() protected courseContentsPage: CoreCourseContentsPage | null = null,
+    ) {
         super();
 
         this.loadingMessage = Translate.instant('core.loading');
         this.promisedEntries = new CorePromisedValue();
     }
 
-    get entries(): AddonModGlossaryEntriesManager | null {
+    get entries(): AddonModThGlossaryEntriesManager | null {
         return this.promisedEntries.value;
     }
 
-    get glossary(): AddonModGlossaryGlossary | undefined {
+    get glossary(): AddonModThGlossaryGlossary | undefined {
         return this.entries?.getSource().glossary;
     }
 
@@ -135,11 +140,11 @@ export class AddonModGlossaryIndexComponent extends CoreCourseModuleMainActivity
 
         // Initialize entries manager.
         const source = CoreRoutedItemsManagerSourcesTracker.getOrCreateSource(
-            AddonModGlossaryEntriesSource,
-            [this.courseId, this.module.id, this.courseContentsPage ? `${ADDON_MOD_GLOSSARY_PAGE_NAME}/` : ''],
+            AddonModThGlossaryEntriesSource,
+            [this.courseId, this.module.id, this.courseContentsPage ? `${ADDON_MOD_TH_GLOSSARY_PAGE_NAME}/` : ''],
         );
 
-        this.promisedEntries.resolve(new AddonModGlossaryEntriesManager(source, this));
+        this.promisedEntries.resolve(new AddonModThGlossaryEntriesManager(source, this));
 
         this.sourceUnsubscribe = source.addListener({
             onItemsUpdated: (items) => {
@@ -150,8 +155,8 @@ export class AddonModGlossaryIndexComponent extends CoreCourseModuleMainActivity
 
         // When an entry is added, we reload the data.
         this.observers = [
-            CoreEvents.on(ADDON_MOD_GLOSSARY_ENTRY_ADDED, ({ glossaryId }) => {
-                if (this.glossary?.id !== glossaryId) {
+            CoreEvents.on(ADDON_MOD_TH_GLOSSARY_ENTRY_ADDED, ({ thglossaryid }) => {
+                if (this.glossary?.id !== thglossaryid) {
                     return;
                 }
 
@@ -160,15 +165,15 @@ export class AddonModGlossaryIndexComponent extends CoreCourseModuleMainActivity
 
                 this.showLoadingAndRefresh(false);
             }),
-            CoreEvents.on(ADDON_MOD_GLOSSARY_ENTRY_UPDATED, ({ glossaryId }) => {
-                if (this.glossary?.id !== glossaryId) {
+            CoreEvents.on(ADDON_MOD_TH_GLOSSARY_ENTRY_UPDATED, ({ thglossaryid }) => {
+                if (this.glossary?.id !== thglossaryid) {
                     return;
                 }
 
                 this.showLoadingAndRefresh(false);
             }),
-            CoreEvents.on(ADDON_MOD_GLOSSARY_ENTRY_DELETED, ({ glossaryId }) => {
-                if (this.glossary?.id !== glossaryId) {
+            CoreEvents.on(ADDON_MOD_TH_GLOSSARY_ENTRY_DELETED, ({ thglossaryid }) => {
+                if (this.glossary?.id !== thglossaryid) {
                     return;
                 }
 
@@ -180,7 +185,7 @@ export class AddonModGlossaryIndexComponent extends CoreCourseModuleMainActivity
         this.observers.push(CoreEvents.on(CoreRatingProvider.RATING_SAVED_EVENT, (data) => {
             if (
                 this.glossary &&
-                data.component == 'mod_glossary' &&
+                data.component == 'mod_thglossary' &&
                 data.ratingArea == 'entry' &&
                 data.contextLevel == ContextLevel.MODULE &&
                 data.instanceId == this.glossary.coursemodule
@@ -192,7 +197,7 @@ export class AddonModGlossaryIndexComponent extends CoreCourseModuleMainActivity
         this.observers.push(CoreEvents.on(CoreRatingSyncProvider.SYNCED_EVENT, (data) => {
             if (
                 this.glossary &&
-                data.component == 'mod_glossary' &&
+                data.component == 'mod_thglossary' &&
                 data.ratingArea == 'entry' &&
                 data.contextLevel == ContextLevel.MODULE &&
                 data.instanceId == this.glossary.coursemodule
@@ -210,7 +215,7 @@ export class AddonModGlossaryIndexComponent extends CoreCourseModuleMainActivity
         const entries = await this.promisedEntries;
 
         await this.loadContent(false, true);
-        await entries.start(this.splitView());
+        await entries.start(this.splitView);
     }
 
     /**
@@ -240,7 +245,7 @@ export class AddonModGlossaryIndexComponent extends CoreCourseModuleMainActivity
         }
 
         const [hasOfflineRatings] = await Promise.all([
-            CoreRatingOffline.hasRatings('mod_glossary', 'entry', ContextLevel.MODULE, this.glossary.coursemodule),
+            CoreRatingOffline.hasRatings('mod_thglossary', 'entry', ContextLevel.MODULE, this.glossary.coursemodule),
             refresh ? entries.reload() : entries.load(),
         ]);
 
@@ -262,8 +267,8 @@ export class AddonModGlossaryIndexComponent extends CoreCourseModuleMainActivity
     /**
      * @inheritdoc
      */
-    protected sync(): Promise<AddonModGlossarySyncResult> {
-        return AddonModGlossaryPrefetchHandler.sync(this.module, this.courseId);
+    protected sync(): Promise<AddonModThGlossarySyncResult> {
+        return AddonModThGlossaryPrefetchHandler.sync(this.module, this.courseId);
     }
 
     /**
@@ -272,8 +277,8 @@ export class AddonModGlossaryIndexComponent extends CoreCourseModuleMainActivity
      * @param syncEventData Data receiven on sync observer.
      * @returns True if refresh is needed, false otherwise.
      */
-    protected isRefreshSyncNeeded(syncEventData: AddonModGlossaryAutoSyncedData): boolean {
-        return !!this.glossary && syncEventData.glossaryId == this.glossary.id &&
+    protected isRefreshSyncNeeded(syncEventData: AddonModThGlossaryAutoSyncedData): boolean {
+        return !!this.glossary && syncEventData.thglossaryid == this.glossary.id &&
                 syncEventData.userId == CoreSites.getCurrentSiteUserId();
     }
 
@@ -282,7 +287,7 @@ export class AddonModGlossaryIndexComponent extends CoreCourseModuleMainActivity
      *
      * @param mode New mode.
      */
-    protected switchMode(mode: AddonModGlossaryFetchMode): void {
+    protected switchMode(mode: AddonModThGlossaryFetchMode): void {
         this.entries?.getSource().switchMode(mode);
 
         switch (mode) {
@@ -294,7 +299,7 @@ export class AddonModGlossaryIndexComponent extends CoreCourseModuleMainActivity
 
             case 'cat_all': {
                 // Browse by category.
-                const getDivider = (entry: AddonModGlossaryEntryWithCategory) => entry.categoryname || '';
+                const getDivider = (entry: AddonModThGlossaryEntryWithCategory) => entry.categoryname || '';
 
                 this.getDivider = getDivider;
                 this.showDivider = (entry, previous) => !previous || getDivider(entry) != getDivider(previous);
@@ -345,7 +350,7 @@ export class AddonModGlossaryIndexComponent extends CoreCourseModuleMainActivity
             await entries.load();
         } catch (error) {
             this.loadMoreError = true;
-            CoreAlerts.showError(error, { default: Translate.instant('addon.mod_glossary.errorloadingentries') });
+            CoreAlerts.showError(error, { default: Translate.instant('addon.mod_thglossary.errorloadingentries') });
         } finally {
             infiniteComplete && infiniteComplete();
         }
@@ -360,12 +365,12 @@ export class AddonModGlossaryIndexComponent extends CoreCourseModuleMainActivity
         if (!this.glossary) {
             return;
         }
-        const { AddonModGlossaryModePickerPopoverComponent } = await import('../mode-picker/mode-picker');
+        const { AddonModThGlossaryModePickerPopoverComponent } = await import('../mode-picker/mode-picker');
 
         const entries = await this.promisedEntries;
         const previousMode = entries.getSource().fetchMode;
-        const newMode = await CorePopovers.open<AddonModGlossaryFetchMode>({
-            component: AddonModGlossaryModePickerPopoverComponent,
+        const newMode = await CorePopovers.open<AddonModThGlossaryFetchMode>({
+            component: AddonModThGlossaryModePickerPopoverComponent,
             componentProps: {
                 browseModes: this.glossary.browsemodes,
                 selectedMode: this.isSearch ? '' : previousMode,
@@ -422,7 +427,7 @@ export class AddonModGlossaryIndexComponent extends CoreCourseModuleMainActivity
      *
      * @param mode Mode.
      */
-    changeFetchMode(mode: AddonModGlossaryFetchMode): void {
+    changeFetchMode(mode: AddonModThGlossaryFetchMode): void {
         this.loadingMessage = Translate.instant('core.loading');
         this.content?.scrollToTop();
         this.switchMode(mode);
@@ -434,7 +439,7 @@ export class AddonModGlossaryIndexComponent extends CoreCourseModuleMainActivity
      * Opens new entry editor.
      */
     openNewEntry(): void {
-        CoreNavigator.navigateToSitePath(`${ADDON_MOD_GLOSSARY_PAGE_NAME}/${this.courseId}/${this.module.id}/entry/new`);
+        CoreNavigator.navigateToSitePath(`${ADDON_MOD_TH_GLOSSARY_PAGE_NAME}/${this.courseId}/${this.module.id}/entry/new`);
     }
 
     /**
@@ -443,12 +448,6 @@ export class AddonModGlossaryIndexComponent extends CoreCourseModuleMainActivity
      * @param query Text entered on the search box.
      */
     search(query: string): void {
-        if (query.trim() === '') {
-            this.toggleSearch();
-
-            return;
-        }
-
         this.loadingMessage = Translate.instant('core.searching');
         this.showLoading = true;
         this.logSearch = CoreTime.once(() => this.performLogSearch(query));
@@ -463,7 +462,7 @@ export class AddonModGlossaryIndexComponent extends CoreCourseModuleMainActivity
      * @param query Text entered on the search box.
      */
     protected async performLogSearch(query: string): Promise<void> {
-        this.analyticsLogEvent('mod_glossary_get_entries_by_search', {
+        this.analyticsLogEvent('mod_thglossary_get_entries_by_search', {
             data: { mode: 'search', hook: query, fullsearch: 1 },
         });
     }
@@ -484,28 +483,28 @@ export class AddonModGlossaryIndexComponent extends CoreCourseModuleMainActivity
 /**
  * Entries manager.
  */
-class AddonModGlossaryEntriesManager extends CoreListItemsManager<AddonModGlossaryEntryItem, AddonModGlossaryEntriesSource> {
+class AddonModThGlossaryEntriesManager extends CoreListItemsManager<AddonModThGlossaryEntryItem, AddonModThGlossaryEntriesSource> {
 
-    page: AddonModGlossaryIndexComponent;
+    page: AddonModThGlossaryIndexComponent;
 
-    constructor(source: AddonModGlossaryEntriesSource, page: AddonModGlossaryIndexComponent) {
+    constructor(source: AddonModThGlossaryEntriesSource, page: AddonModThGlossaryIndexComponent) {
         super(source, page.route.component);
 
         this.page = page;
     }
 
-    get offlineEntries(): AddonModGlossaryOfflineEntry[] {
+    get offlineEntries(): AddonModThGlossaryOfflineEntry[] {
         return this.getSource().offlineEntries;
     }
 
-    get onlineEntries(): AddonModGlossaryEntry[] {
+    get onlineEntries(): AddonModThGlossaryEntry[] {
         return this.getSource().onlineEntries;
     }
 
     /**
      * @inheritdoc
      */
-    protected getDefaultItem(): AddonModGlossaryEntryItem | null {
+    protected getDefaultItem(): AddonModThGlossaryEntryItem | null {
         return this.getSource().onlineEntries[0] || null;
     }
 
@@ -521,14 +520,14 @@ class AddonModGlossaryEntriesManager extends CoreListItemsManager<AddonModGlossa
         }
 
         try {
-            await AddonModGlossary.logView(glossary.id, viewMode);
+            await AddonModThGlossary.logView(glossary.id, viewMode);
 
             CoreCourse.checkModuleCompletion(this.page.courseId, this.page.module.completiondata);
         } catch {
             // Ignore errors.
         }
 
-        this.page.analyticsLogEvent('mod_glossary_view_glossary', { data: { mode: viewMode } });
+        this.page.analyticsLogEvent('mod_thglossary_view_thglossary', { data: { mode: viewMode } });
     }
 
     /**

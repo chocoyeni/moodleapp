@@ -21,10 +21,10 @@ import { makeSingleton } from '@singletons';
  * Handler to support tags.
  */
 @Injectable({ providedIn: 'root' })
-export class AddonModGlossaryTagAreaHandlerService implements CoreTagAreaHandler {
+export class AddonModThGlossaryTagAreaHandlerService implements CoreTagAreaHandler {
 
-    name = 'AddonModGlossaryTagAreaHandler';
-    type = 'mod_glossary/glossary_entries';
+    name = 'AddonModThGlossaryTagAreaHandler';
+    type = 'mod_thglossary/thglossary_entries';
 
     /**
      * @inheritdoc
@@ -51,4 +51,4 @@ export class AddonModGlossaryTagAreaHandlerService implements CoreTagAreaHandler
 
 }
 
-export const AddonModGlossaryTagAreaHandler = makeSingleton(AddonModGlossaryTagAreaHandlerService);
+export const AddonModThGlossaryTagAreaHandler = makeSingleton(AddonModThGlossaryTagAreaHandlerService);

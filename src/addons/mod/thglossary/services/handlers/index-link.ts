@@ -15,18 +15,18 @@
 import { Injectable } from '@angular/core';
 import { CoreContentLinksModuleIndexHandler } from '@features/contentlinks/classes/module-index-handler';
 import { makeSingleton } from '@singletons';
-import { ADDON_MOD_GLOSSARY_COMPONENT, ADDON_MOD_GLOSSARY_MODNAME } from '../../constants';
+import { ADDON_MOD_TH_GLOSSARY_COMPONENT, ADDON_MOD_TH_GLOSSARY_MODNAME } from '../../constants';
 
 /**
  * Handler to treat links to glossary index.
  */
 @Injectable({ providedIn: 'root' })
-export class AddonModGlossaryIndexLinkHandlerService extends CoreContentLinksModuleIndexHandler {
+export class AddonModThGlossaryIndexLinkHandlerService extends CoreContentLinksModuleIndexHandler {
 
-    name = 'AddonModGlossaryIndexLinkHandler';
+    name = 'AddonModThGlossaryIndexLinkHandler';
 
     constructor() {
-        super(ADDON_MOD_GLOSSARY_COMPONENT, ADDON_MOD_GLOSSARY_MODNAME, 'g');
+        super(ADDON_MOD_TH_GLOSSARY_COMPONENT, ADDON_MOD_TH_GLOSSARY_MODNAME, 'g');
     }
 
     /**
@@ -38,4 +38,4 @@ export class AddonModGlossaryIndexLinkHandlerService extends CoreContentLinksMod
 
 }
 
-export const AddonModGlossaryIndexLinkHandler = makeSingleton(AddonModGlossaryIndexLinkHandlerService);
+export const AddonModThGlossaryIndexLinkHandler = makeSingleton(AddonModThGlossaryIndexLinkHandlerService);

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Component, OnInit, ElementRef, inject, viewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { CoreError } from '@classes/errors/error';
@@ -29,16 +29,16 @@ import { Translate } from '@singletons';
 import { CoreEventObserver, CoreEvents } from '@singletons/events';
 import { CoreForms } from '@singletons/form';
 import {
-    AddonModGlossary,
-    AddonModGlossaryCategory,
-    AddonModGlossaryEntry,
-    AddonModGlossaryEntryOption,
-    AddonModGlossaryGlossary,
-} from '../../services/glossary';
-import { AddonModGlossaryHelper } from '../../services/glossary-helper';
-import { AddonModGlossaryOffline } from '../../services/glossary-offline';
+    AddonModThGlossary,
+    AddonModThGlossaryCategory,
+    AddonModThGlossaryEntry,
+    AddonModThGlossaryEntryOption,
+    AddonModThGlossaryGlossary,
+} from '../../services/thglossary';
+import { AddonModThGlossaryHelper } from '../../services/thglossary-helper';
+import { AddonModThGlossaryOffline } from '../../services/thglossary-offline';
 import { CoreAnalytics, CoreAnalyticsEventType } from '@services/analytics';
-import { ADDON_MOD_GLOSSARY_COMPONENT_LEGACY } from '../../constants';
+import { ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY } from '../../constants';
 import { CoreLoadings } from '@services/overlays/loadings';
 import { CoreAlerts } from '@services/overlays/alerts';
 import { CoreEditorRichTextEditorComponent } from '@features/editor/components/rich-text-editor/rich-text-editor';
@@ -48,28 +48,29 @@ import { CoreSharedModule } from '@/core/shared.module';
  * Page that displays the edit form.
  */
 @Component({
-    selector: 'page-addon-mod-glossary-edit',
+    selector: 'page-addon-mod-th-glossary-edit',
     templateUrl: 'edit.html',
+    standalone: true,
     imports: [
         CoreSharedModule,
         CoreEditorRichTextEditorComponent,
     ],
 })
-export default class AddonModGlossaryEditPage implements OnInit, CanLeave {
+export default class AddonModThGlossaryEditPage implements OnInit, CanLeave {
 
-    readonly formElement = viewChild<ElementRef>('editFormEl');
+    @ViewChild('editFormEl') formElement?: ElementRef;
 
-    component = ADDON_MOD_GLOSSARY_COMPONENT_LEGACY;
+    component = ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY;
     cmId!: number;
     courseId!: number;
     loaded = false;
-    glossary?: AddonModGlossaryGlossary;
+    glossary?: AddonModThGlossaryGlossary;
     definitionControl = new FormControl<string | null>(null);
-    categories: AddonModGlossaryCategory[] = [];
+    categories: AddonModThGlossaryCategory[] = [];
     showAliases = true;
     editorExtraParams: Record<string, unknown> = {};
-    handler!: AddonModGlossaryFormHandler;
-    data: AddonModGlossaryFormData = {
+    handler!: AddonModThGlossaryFormHandler;
+    data: AddonModThGlossaryFormData = {
         concept: '',
         definition: '',
         timecreated: 0,
@@ -81,14 +82,15 @@ export default class AddonModGlossaryEditPage implements OnInit, CanLeave {
         fullmatch: false,
     };
 
-    originalData?: AddonModGlossaryFormData;
+    originalData?: AddonModThGlossaryFormData;
 
-    protected entry?: AddonModGlossaryEntry;
+    protected entry?: AddonModThGlossaryEntry;
     protected syncId?: string;
     protected syncObserver?: CoreEventObserver;
     protected isDestroyed = false;
     protected saved = false;
-    protected route = inject(ActivatedRoute);
+
+    constructor(protected route: ActivatedRoute) {}
 
     /**
      * @inheritdoc
@@ -102,19 +104,19 @@ export default class AddonModGlossaryEditPage implements OnInit, CanLeave {
             if (entrySlug?.startsWith('new-')) {
                 const timecreated = Number(entrySlug.slice(4));
                 this.editorExtraParams.timecreated = timecreated;
-                this.handler = new AddonModGlossaryOfflineFormHandler(this, timecreated);
+                this.handler = new AddonModThGlossaryOfflineFormHandler(this, timecreated);
             } else if (entrySlug) {
                 // Get the entry content unfiltered to edit it.
-                const { entry } = await AddonModGlossary.getEntry(Number(entrySlug), {
+                const { entry } = await AddonModThGlossary.getEntry(Number(entrySlug), {
                     readingStrategy: CoreSitesReadingStrategy.ONLY_NETWORK,
                     filter: false,
                 });
 
                 this.entry = entry;
                 this.editorExtraParams.timecreated = entry.timecreated;
-                this.handler = new AddonModGlossaryOnlineFormHandler(this, entry);
+                this.handler = new AddonModThGlossaryOnlineFormHandler(this, entry);
             } else {
-                this.handler = new AddonModGlossaryNewFormHandler(this);
+                this.handler = new AddonModThGlossaryNewFormHandler(this);
             }
         } catch (error) {
             CoreAlerts.showError(error);
@@ -133,25 +135,25 @@ export default class AddonModGlossaryEditPage implements OnInit, CanLeave {
      */
     protected async fetchData(): Promise<void> {
         try {
-            this.glossary = await AddonModGlossary.getGlossary(this.courseId, this.cmId);
+            this.glossary = await AddonModThGlossary.getGlossary(this.courseId, this.cmId);
 
             await this.handler.loadData(this.glossary);
 
             this.loaded = true;
 
-            if (this.handler instanceof AddonModGlossaryOfflineFormHandler) {
+            if (this.handler instanceof AddonModThGlossaryOfflineFormHandler) {
                 return;
             }
 
             CoreAnalytics.logEvent({
                 type: CoreAnalyticsEventType.VIEW_ITEM,
-                ws: 'mod_glossary_get_glossaries_by_courses',
+                ws: 'mod_thglossary_get_glossaries_by_courses',
                 name: this.glossary.name,
                 data: { id: this.glossary.id, category: 'glossary' },
                 url: '/mod/glossary/edit.php' + (this.entry ? `?cmid=${this.cmId}&id=${this.entry.id}` : ''),
             });
         } catch (error) {
-            CoreAlerts.showError(error, { default: Translate.instant('addon.mod_glossary.errorloadingglossary') });
+            CoreAlerts.showError(error, { default: Translate.instant('addon.mod_thglossary.errorloadingglossary') });
             CoreNavigator.back();
         }
     }
@@ -202,7 +204,7 @@ export default class AddonModGlossaryEditPage implements OnInit, CanLeave {
         // Delete the local files from the tmp folder.
         CoreFileUploader.clearTmpFiles(this.data.attachments);
 
-        CoreForms.triggerFormCancelledEvent(this.formElement(), CoreSites.getCurrentSiteId());
+        CoreForms.triggerFormCancelledEvent(this.formElement, CoreSites.getCurrentSiteId());
 
         return true;
     }
@@ -212,7 +214,7 @@ export default class AddonModGlossaryEditPage implements OnInit, CanLeave {
      */
     async save(): Promise<void> {
         if (!this.data.concept || !this.data.definition) {
-            CoreAlerts.showError(Translate.instant('addon.mod_glossary.fillfields'));
+            CoreAlerts.showError(Translate.instant('addon.mod_thglossary.fillfields'));
 
             return;
         }
@@ -228,11 +230,11 @@ export default class AddonModGlossaryEditPage implements OnInit, CanLeave {
 
             this.saved = true;
 
-            CoreForms.triggerFormSubmittedEvent(this.formElement(), savedOnline, CoreSites.getCurrentSiteId());
+            CoreForms.triggerFormSubmittedEvent(this.formElement, savedOnline, CoreSites.getCurrentSiteId());
 
             CoreNavigator.back();
         } catch (error) {
-            CoreAlerts.showError(error, { default: Translate.instant('addon.mod_glossary.cannoteditentry') });
+            CoreAlerts.showError(error, { default: Translate.instant('addon.mod_thglossary.cannoteditentry') });
         } finally {
             modal.dismiss();
         }
@@ -261,16 +263,16 @@ export default class AddonModGlossaryEditPage implements OnInit, CanLeave {
 /**
  * Helper to manage form data.
  */
-abstract class AddonModGlossaryFormHandler {
+abstract class AddonModThGlossaryFormHandler {
 
-    constructor(protected page: AddonModGlossaryEditPage) {}
+    constructor(protected page: AddonModThGlossaryEditPage) {}
 
     /**
      * Load form data.
      *
      * @param glossary Glossary.
      */
-    abstract loadData(glossary: AddonModGlossaryGlossary): Promise<void>;
+    abstract loadData(glossary: AddonModThGlossaryGlossary): Promise<void>;
 
     /**
      * Save form data.
@@ -278,15 +280,15 @@ abstract class AddonModGlossaryFormHandler {
      * @param glossary Glossary.
      * @returns Whether the form was saved online.
      */
-    abstract save(glossary: AddonModGlossaryGlossary): Promise<boolean>;
+    abstract save(glossary: AddonModThGlossaryGlossary): Promise<boolean>;
 
     /**
      * Load form categories.
      *
      * @param glossary Glossary.
      */
-    protected async loadCategories(glossary: AddonModGlossaryGlossary): Promise<void> {
-        this.page.categories = await AddonModGlossary.getAllCategories(glossary.id, {
+    protected async loadCategories(glossary: AddonModThGlossaryGlossary): Promise<void> {
+        this.page.categories = await AddonModThGlossary.getAllCategories(glossary.id, {
             cmId: this.page.cmId,
         });
     }
@@ -297,11 +299,11 @@ abstract class AddonModGlossaryFormHandler {
      * @param glossary Glossary.
      * @returns Uploaded attachments item id, undefined if nothing to upload or change.
      */
-    protected async uploadAttachments(glossary: AddonModGlossaryGlossary): Promise<number | undefined> {
+    protected async uploadAttachments(glossary: AddonModThGlossaryGlossary): Promise<number | undefined> {
         const data = this.page.data;
         const itemId = await CoreFileUploader.uploadOrReuploadFiles(
             data.attachments,
-            ADDON_MOD_GLOSSARY_COMPONENT_LEGACY,
+            ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY,
             glossary.id,
         );
 
@@ -316,11 +318,11 @@ abstract class AddonModGlossaryFormHandler {
      * @returns Storage result.
      */
     protected async storeAttachments(
-        glossary: AddonModGlossaryGlossary,
+        glossary: AddonModThGlossaryGlossary,
         timecreated: number,
     ): Promise<CoreFileUploaderStoreFilesResult> {
         const data = this.page.data;
-        const result = await AddonModGlossaryHelper.storeFiles(
+        const result = await AddonModThGlossaryHelper.storeFiles(
             glossary.id,
             data.concept,
             timecreated,
@@ -335,20 +337,20 @@ abstract class AddonModGlossaryFormHandler {
      *
      * @param glossary Glossary.
      */
-    protected async checkDuplicates(glossary: AddonModGlossaryGlossary): Promise<void> {
+    protected async checkDuplicates(glossary: AddonModThGlossaryGlossary): Promise<void> {
         if (glossary.allowduplicatedentries) {
             return;
         }
 
         const data = this.page.data;
-        const isUsed = await AddonModGlossary.isConceptUsed(glossary.id, data.concept, {
+        const isUsed = await AddonModThGlossary.isConceptUsed(glossary.id, data.concept, {
             timeCreated: data.timecreated,
             cmId: this.page.cmId,
         });
 
         if (isUsed) {
             // There's a entry with same name, reject with error message.
-            throw new CoreError(Translate.instant('addon.mod_glossary.errconceptalreadyexists'));
+            throw new CoreError(Translate.instant('addon.mod_thglossary.errconceptalreadyexists'));
         }
     }
 
@@ -358,9 +360,9 @@ abstract class AddonModGlossaryFormHandler {
      * @param glossary Glossary.
      * @returns Options.
      */
-    protected getSaveOptions(glossary: AddonModGlossaryGlossary): Record<string, AddonModGlossaryEntryOption> {
+    protected getSaveOptions(glossary: AddonModThGlossaryGlossary): Record<string, AddonModThGlossaryEntryOption> {
         const data = this.page.data;
-        const options: Record<string, AddonModGlossaryEntryOption> = {};
+        const options: Record<string, AddonModThGlossaryEntryOption> = {};
 
         if (this.page.showAliases) {
             options.aliases = data.aliases;
@@ -387,11 +389,11 @@ abstract class AddonModGlossaryFormHandler {
 /**
  * Helper to manage the form data for an offline entry.
  */
-class AddonModGlossaryOfflineFormHandler extends AddonModGlossaryFormHandler {
+class AddonModThGlossaryOfflineFormHandler extends AddonModThGlossaryFormHandler {
 
     private timecreated: number;
 
-    constructor(page: AddonModGlossaryEditPage, timecreated: number) {
+    constructor(page: AddonModThGlossaryEditPage, timecreated: number) {
         super(page);
 
         this.timecreated = timecreated;
@@ -400,9 +402,9 @@ class AddonModGlossaryOfflineFormHandler extends AddonModGlossaryFormHandler {
     /**
      * @inheritdoc
      */
-    async loadData(glossary: AddonModGlossaryGlossary): Promise<void> {
+    async loadData(glossary: AddonModThGlossaryGlossary): Promise<void> {
         const data = this.page.data;
-        const entry = await AddonModGlossaryOffline.getOfflineEntry(glossary.id, this.timecreated);
+        const entry = await AddonModThGlossaryOffline.getOfflineEntry(glossary.id, this.timecreated);
 
         data.concept = entry.concept || '';
         data.definition = entry.definition || '';
@@ -421,7 +423,7 @@ class AddonModGlossaryOfflineFormHandler extends AddonModGlossaryFormHandler {
 
         // Treat offline attachments if any.
         if (entry.attachments?.offline) {
-            data.attachments = await AddonModGlossaryHelper.getStoredFiles(glossary.id, entry.concept, entry.timecreated);
+            data.attachments = await AddonModThGlossaryHelper.getStoredFiles(glossary.id, entry.concept, entry.timecreated);
         }
 
         this.page.originalData = {
@@ -444,7 +446,7 @@ class AddonModGlossaryOfflineFormHandler extends AddonModGlossaryFormHandler {
     /**
      * @inheritdoc
      */
-    async save(glossary: AddonModGlossaryGlossary): Promise<boolean> {
+    async save(glossary: AddonModThGlossaryGlossary): Promise<boolean> {
         const originalData = this.page.data;
         const data = this.page.data;
 
@@ -456,7 +458,7 @@ class AddonModGlossaryOfflineFormHandler extends AddonModGlossaryFormHandler {
         }
 
         if (originalData.concept !== data.concept) {
-            await AddonModGlossaryHelper.deleteStoredFiles(glossary.id, originalData.concept, data.timecreated);
+            await AddonModThGlossaryHelper.deleteStoredFiles(glossary.id, originalData.concept, data.timecreated);
         }
 
         // Save entry data.
@@ -475,7 +477,7 @@ class AddonModGlossaryOfflineFormHandler extends AddonModGlossaryFormHandler {
      * @param uploadedAttachments Uploaded attachments.
      */
     protected async updateOfflineEntry(
-        glossary: AddonModGlossaryGlossary,
+        glossary: AddonModThGlossaryGlossary,
         uploadedAttachments?: CoreFileUploaderStoreFilesResult,
     ): Promise<void> {
         const originalData = this.page.originalData;
@@ -488,9 +490,9 @@ class AddonModGlossaryOfflineFormHandler extends AddonModGlossaryFormHandler {
         }
 
         await this.checkDuplicates(glossary);
-        await AddonModGlossaryOffline.updateOfflineEntry(
+        await AddonModThGlossaryOffline.updateOfflineEntry(
             {
-                glossaryid: glossary.id,
+                thglossaryid: glossary.id,
                 courseid: this.page.courseId,
                 concept: originalData.concept,
                 timecreated: originalData.timecreated,
@@ -507,19 +509,19 @@ class AddonModGlossaryOfflineFormHandler extends AddonModGlossaryFormHandler {
 /**
  * Helper to manage the form data for creating a new entry.
  */
-class AddonModGlossaryNewFormHandler extends AddonModGlossaryFormHandler {
+class AddonModThGlossaryNewFormHandler extends AddonModThGlossaryFormHandler {
 
     /**
      * @inheritdoc
      */
-    async loadData(glossary: AddonModGlossaryGlossary): Promise<void> {
+    async loadData(glossary: AddonModThGlossaryGlossary): Promise<void> {
         await this.loadCategories(glossary);
     }
 
     /**
      * @inheritdoc
      */
-    async save(glossary: AddonModGlossaryGlossary): Promise<boolean> {
+    async save(glossary: AddonModThGlossaryGlossary): Promise<boolean> {
         const data = this.page.data;
         const timecreated = Date.now();
 
@@ -549,7 +551,7 @@ class AddonModGlossaryNewFormHandler extends AddonModGlossaryFormHandler {
 
         if (entryId) {
             // Data sent to server, delete stored files (if any).
-            AddonModGlossaryHelper.deleteStoredFiles(glossary.id, data.concept, timecreated);
+            AddonModThGlossaryHelper.deleteStoredFiles(glossary.id, data.concept, timecreated);
             CoreEvents.trigger(CoreEvents.ACTIVITY_DATA_SENT, { module: 'glossary' });
         }
 
@@ -564,7 +566,7 @@ class AddonModGlossaryNewFormHandler extends AddonModGlossaryFormHandler {
      * @param uploadedAttachments Uploaded attachments.
      */
     protected async createOfflineEntry(
-        glossary: AddonModGlossaryGlossary,
+        glossary: AddonModThGlossaryGlossary,
         timecreated: number,
         uploadedAttachments?: CoreFileUploaderStoreFilesResult,
     ): Promise<void> {
@@ -573,7 +575,7 @@ class AddonModGlossaryNewFormHandler extends AddonModGlossaryFormHandler {
         const definition = CoreText.formatHtmlLines(data.definition);
 
         await this.checkDuplicates(glossary);
-        await AddonModGlossaryOffline.addOfflineEntry(
+        await AddonModThGlossaryOffline.addOfflineEntry(
             glossary.id,
             data.concept,
             definition,
@@ -596,7 +598,7 @@ class AddonModGlossaryNewFormHandler extends AddonModGlossaryFormHandler {
      * @returns Entry id.
      */
     protected async createOnlineEntry(
-        glossary: AddonModGlossaryGlossary,
+        glossary: AddonModThGlossaryGlossary,
         timecreated: number,
         uploadedAttachmentsId?: number,
         allowOffline?: boolean,
@@ -604,7 +606,7 @@ class AddonModGlossaryNewFormHandler extends AddonModGlossaryFormHandler {
         const data = this.page.data;
         const options = this.getSaveOptions(glossary);
         const definition = CoreText.formatHtmlLines(data.definition);
-        const entryId = await AddonModGlossary.addEntry(
+        const entryId = await AddonModThGlossary.addEntry(
             glossary.id,
             data.concept,
             definition,
@@ -626,11 +628,11 @@ class AddonModGlossaryNewFormHandler extends AddonModGlossaryFormHandler {
 /**
  * Helper to manage the form data for an online entry.
  */
-class AddonModGlossaryOnlineFormHandler extends AddonModGlossaryFormHandler {
+class AddonModThGlossaryOnlineFormHandler extends AddonModThGlossaryFormHandler {
 
-    private entry: AddonModGlossaryEntry;
+    private entry: AddonModThGlossaryEntry;
 
-    constructor(page: AddonModGlossaryEditPage, entry: AddonModGlossaryEntry) {
+    constructor(page: AddonModThGlossaryEditPage, entry: AddonModThGlossaryEntry) {
         super(page);
 
         this.entry = entry;
@@ -676,7 +678,7 @@ class AddonModGlossaryOnlineFormHandler extends AddonModGlossaryFormHandler {
     /**
      * @inheritdoc
      */
-    async save(glossary: AddonModGlossaryGlossary): Promise<boolean> {
+    async save(glossary: AddonModThGlossaryGlossary): Promise<boolean> {
         if (!CoreNetwork.isOnline()) {
             throw new CoreNetworkError();
         }
@@ -692,7 +694,7 @@ class AddonModGlossaryOnlineFormHandler extends AddonModGlossaryFormHandler {
         const attachmentsId = await this.uploadAttachments();
 
         // Save entry data.
-        await AddonModGlossary.updateEntry(glossary.id, this.entry.id, data.concept, definition, options, attachmentsId);
+        await AddonModThGlossary.updateEntry(glossary.id, this.entry.id, data.concept, definition, options, attachmentsId);
 
         // Delete the local files from the tmp folder.
         CoreFileUploader.clearTmpFiles(data.attachments);
@@ -714,7 +716,7 @@ class AddonModGlossaryOnlineFormHandler extends AddonModGlossaryFormHandler {
             return;
         }
 
-        const { attachmentsid: attachmentsId } = await AddonModGlossary.prepareEntryForEdition(this.entry.id);
+        const { attachmentsid: attachmentsId } = await AddonModThGlossary.prepareEntryForEdition(this.entry.id);
 
         const removedFiles = CoreFileUploader.getFilesToDelete(this.entry.attachments ?? [], data.attachments);
 
@@ -732,7 +734,7 @@ class AddonModGlossaryOnlineFormHandler extends AddonModGlossaryFormHandler {
 /**
  * Form data.
  */
-type AddonModGlossaryFormData = {
+type AddonModThGlossaryFormData = {
     concept: string;
     definition: string;
     timecreated: number;

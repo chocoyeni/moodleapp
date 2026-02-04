@@ -20,35 +20,35 @@ import { CoreText } from '@singletons/text';
 import { makeSingleton } from '@singletons';
 import { CoreEvents } from '@singletons/events';
 import { CorePath } from '@singletons/path';
-import { AddonModGlossaryOfflineEntryDBRecord, OFFLINE_ENTRIES_TABLE_NAME } from './database/glossary';
-import { AddonModGlossaryEntryOption } from './glossary';
-import { ADDON_MOD_GLOSSARY_ENTRY_DELETED, ADDON_MOD_GLOSSARY_ENTRY_ADDED, ADDON_MOD_GLOSSARY_ENTRY_UPDATED } from '../constants';
+import { AddonModThGlossaryOfflineEntryDBRecord, OFFLINE_ENTRIES_TABLE_NAME } from './database/thglossary';
+import { AddonModThGlossaryEntryOption } from './thglossary';
+import { ADDON_MOD_TH_GLOSSARY_ENTRY_DELETED, ADDON_MOD_TH_GLOSSARY_ENTRY_ADDED, ADDON_MOD_TH_GLOSSARY_ENTRY_UPDATED } from '../constants';
 
 /**
  * Service to handle offline glossary.
  */
 @Injectable({ providedIn: 'root' })
-export class AddonModGlossaryOfflineProvider {
+export class AddonModThGlossaryOfflineProvider {
 
     /**
      * Delete an offline entry.
      *
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param timecreated The time the entry was created.
      * @param siteId Site ID. If not defined, current site.
      * @returns Promise resolved if deleted, rejected if failure.
      */
-    async deleteOfflineEntry(glossaryId: number, timecreated: number, siteId?: string): Promise<void> {
+    async deleteOfflineEntry(thglossaryid: number, timecreated: number, siteId?: string): Promise<void> {
         const site = await CoreSites.getSite(siteId);
 
-        const conditions: Partial<AddonModGlossaryOfflineEntryDBRecord> = {
-            glossaryid: glossaryId,
+        const conditions: Partial<AddonModThGlossaryOfflineEntryDBRecord> = {
+            thglossaryid: thglossaryid,
             timecreated: timecreated,
         };
 
         await site.getDb().deleteRecords(OFFLINE_ENTRIES_TABLE_NAME, conditions);
 
-        CoreEvents.trigger(ADDON_MOD_GLOSSARY_ENTRY_DELETED, { glossaryId, timecreated });
+        CoreEvents.trigger(ADDON_MOD_TH_GLOSSARY_ENTRY_DELETED, { thglossaryid, timecreated });
     }
 
     /**
@@ -57,10 +57,10 @@ export class AddonModGlossaryOfflineProvider {
      * @param siteId Site ID. If not defined, current site.
      * @returns Promise resolved with entries.
      */
-    async getAllOfflineEntries(siteId?: string): Promise<AddonModGlossaryOfflineEntry[]> {
+    async getAllOfflineEntries(siteId?: string): Promise<AddonModThGlossaryOfflineEntry[]> {
         const site = await CoreSites.getSite(siteId);
 
-        const records = await site.getDb().getRecords<AddonModGlossaryOfflineEntryDBRecord>(OFFLINE_ENTRIES_TABLE_NAME);
+        const records = await site.getDb().getRecords<AddonModThGlossaryOfflineEntryDBRecord>(OFFLINE_ENTRIES_TABLE_NAME);
 
         return records.map(record => this.parseRecord(record));
     }
@@ -68,24 +68,24 @@ export class AddonModGlossaryOfflineProvider {
     /**
      * Get a stored offline entry.
      *
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param timeCreated The time the entry was created.
      * @param siteId Site ID. If not defined, current site.
      * @returns Promise resolved with entry.
      */
     async getOfflineEntry(
-        glossaryId: number,
+        thglossaryid: number,
         timeCreated: number,
         siteId?: string,
-    ): Promise<AddonModGlossaryOfflineEntry> {
+    ): Promise<AddonModThGlossaryOfflineEntry> {
         const site = await CoreSites.getSite(siteId);
 
-        const conditions: Partial<AddonModGlossaryOfflineEntryDBRecord> = {
-            glossaryid: glossaryId,
+        const conditions: Partial<AddonModThGlossaryOfflineEntryDBRecord> = {
+            thglossaryid: thglossaryid,
             timecreated: timeCreated,
         };
 
-        const record = await site.getDb().getRecord<AddonModGlossaryOfflineEntryDBRecord>(OFFLINE_ENTRIES_TABLE_NAME, conditions);
+        const record = await site.getDb().getRecord<AddonModThGlossaryOfflineEntryDBRecord>(OFFLINE_ENTRIES_TABLE_NAME, conditions);
 
         return this.parseRecord(record);
     }
@@ -93,20 +93,20 @@ export class AddonModGlossaryOfflineProvider {
     /**
      * Get all the stored add entry data from a certain glossary.
      *
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param siteId Site ID. If not defined, current site.
      * @param userId User the entries belong to. If not defined, current user in site.
      * @returns Promise resolved with entries.
      */
-    async getGlossaryOfflineEntries(glossaryId: number, siteId?: string, userId?: number): Promise<AddonModGlossaryOfflineEntry[]> {
+    async getGlossaryOfflineEntries(thglossaryid: number, siteId?: string, userId?: number): Promise<AddonModThGlossaryOfflineEntry[]> {
         const site = await CoreSites.getSite(siteId);
 
-        const conditions: Partial<AddonModGlossaryOfflineEntryDBRecord> = {
-            glossaryid: glossaryId,
+        const conditions: Partial<AddonModThGlossaryOfflineEntryDBRecord> = {
+            thglossaryid: thglossaryid,
             userid: userId || site.getUserId(),
         };
 
-        const records = await site.getDb().getRecords<AddonModGlossaryOfflineEntryDBRecord>(OFFLINE_ENTRIES_TABLE_NAME, conditions);
+        const records = await site.getDb().getRecords<AddonModThGlossaryOfflineEntryDBRecord>(OFFLINE_ENTRIES_TABLE_NAME, conditions);
 
         return records.map(record => this.parseRecord(record));
     }
@@ -114,23 +114,23 @@ export class AddonModGlossaryOfflineProvider {
     /**
      * Check if a concept is used offline.
      *
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param concept Concept to check.
      * @param timeCreated Time of the entry we are editing.
      * @param siteId Site ID. If not defined, current site.
      * @returns Promise resolved with true if concept is found, false otherwise.
      */
-    async isConceptUsed(glossaryId: number, concept: string, timeCreated?: number, siteId?: string): Promise<boolean> {
+    async isConceptUsed(thglossaryid: number, concept: string, timeCreated?: number, siteId?: string): Promise<boolean> {
         try {
             const site = await CoreSites.getSite(siteId);
 
-            const conditions: Partial<AddonModGlossaryOfflineEntryDBRecord> = {
-                glossaryid: glossaryId,
+            const conditions: Partial<AddonModThGlossaryOfflineEntryDBRecord> = {
+                thglossaryid: thglossaryid,
                 concept: concept,
             };
 
             const entries =
-                await site.getDb().getRecords<AddonModGlossaryOfflineEntryDBRecord>(OFFLINE_ENTRIES_TABLE_NAME, conditions);
+                await site.getDb().getRecords<AddonModThGlossaryOfflineEntryDBRecord>(OFFLINE_ENTRIES_TABLE_NAME, conditions);
 
             if (!entries.length) {
                 return false;
@@ -151,7 +151,7 @@ export class AddonModGlossaryOfflineProvider {
     /**
      * Save an offline entry to be sent later.
      *
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param concept Glossary entry concept.
      * @param definition Glossary entry concept definition.
      * @param courseId Course ID of the glossary.
@@ -163,20 +163,20 @@ export class AddonModGlossaryOfflineProvider {
      * @returns Promise resolved if stored, rejected if failure.
      */
     async addOfflineEntry(
-        glossaryId: number,
+        thglossaryid: number,
         concept: string,
         definition: string,
         courseId: number,
         timecreated: number,
-        options?: Record<string, AddonModGlossaryEntryOption>,
+        options?: Record<string, AddonModThGlossaryEntryOption>,
         attachments?: CoreFileUploaderStoreFilesResult,
         siteId?: string,
         userId?: number,
     ): Promise<false> {
         const site = await CoreSites.getSite(siteId);
 
-        const entry: AddonModGlossaryOfflineEntryDBRecord = {
-            glossaryid: glossaryId,
+        const entry: AddonModThGlossaryOfflineEntryDBRecord = {
+            thglossaryid: thglossaryid,
             courseid: courseId,
             concept: concept,
             definition: definition,
@@ -189,7 +189,7 @@ export class AddonModGlossaryOfflineProvider {
 
         await site.getDb().insertRecord(OFFLINE_ENTRIES_TABLE_NAME, entry);
 
-        CoreEvents.trigger(ADDON_MOD_GLOSSARY_ENTRY_ADDED, { glossaryId, timecreated }, siteId);
+        CoreEvents.trigger(ADDON_MOD_TH_GLOSSARY_ENTRY_ADDED, { thglossaryid, timecreated }, siteId);
 
         return false;
     }
@@ -204,14 +204,14 @@ export class AddonModGlossaryOfflineProvider {
      * @param attachments Result of CoreFileUploaderProvider#storeFilesToUpload for attachments.
      */
     async updateOfflineEntry(
-        originalEntry: Pick< AddonModGlossaryOfflineEntryDBRecord, 'glossaryid'|'courseid'|'concept'|'timecreated'>,
+        originalEntry: Pick< AddonModThGlossaryOfflineEntryDBRecord, 'thglossaryid'|'courseid'|'concept'|'timecreated'>,
         concept: string,
         definition: string,
-        options?: Record<string, AddonModGlossaryEntryOption>,
+        options?: Record<string, AddonModThGlossaryEntryOption>,
         attachments?: CoreFileUploaderStoreFilesResult,
     ): Promise<void> {
         const site = await CoreSites.getSite();
-        const entry: Omit<AddonModGlossaryOfflineEntryDBRecord, 'courseid'|'glossaryid'|'userid'|'timecreated'> = {
+        const entry: Omit<AddonModThGlossaryOfflineEntryDBRecord, 'courseid'|'thglossaryid'|'userid'|'timecreated'> = {
             concept: concept,
             definition: definition,
             definitionformat: 'html',
@@ -224,8 +224,8 @@ export class AddonModGlossaryOfflineProvider {
             userid: site.getUserId(),
         });
 
-        CoreEvents.trigger(ADDON_MOD_GLOSSARY_ENTRY_UPDATED, {
-            glossaryId: originalEntry.glossaryid,
+        CoreEvents.trigger(ADDON_MOD_TH_GLOSSARY_ENTRY_UPDATED, {
+            thglossaryid: originalEntry.thglossaryid,
             timecreated: originalEntry.timecreated,
         });
     }
@@ -233,15 +233,15 @@ export class AddonModGlossaryOfflineProvider {
     /**
      * Get the path to the folder where to store files for offline attachments in a glossary.
      *
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param siteId Site ID. If not defined, current site.
      * @returns Promise resolved with the path.
      */
-    async getGlossaryFolder(glossaryId: number, siteId?: string): Promise<string> {
+    async getGlossaryFolder(thglossaryid: number, siteId?: string): Promise<string> {
         const site = await CoreSites.getSite(siteId);
 
         const siteFolderPath = CoreFile.getSiteFolder(site.getId());
-        const folderPath = `offlineglossary/${glossaryId}`;
+        const folderPath = `offlineglossary/${thglossaryid}`;
 
         return CorePath.concatenatePaths(siteFolderPath, folderPath);
     }
@@ -249,14 +249,14 @@ export class AddonModGlossaryOfflineProvider {
     /**
      * Get the path to the folder where to store files for an offline entry.
      *
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param concept The name of the entry.
      * @param timeCreated Time to allow duplicated entries.
      * @param siteId Site ID. If not defined, current site.
      * @returns Promise resolved with the path.
      */
-    async getEntryFolder(glossaryId: number, concept: string, timeCreated: number, siteId?: string): Promise<string> {
-        const folderPath = await this.getGlossaryFolder(glossaryId, siteId);
+    async getEntryFolder(thglossaryid: number, concept: string, timeCreated: number, siteId?: string): Promise<string> {
+        const folderPath = await this.getGlossaryFolder(thglossaryid, siteId);
 
         return CorePath.concatenatePaths(folderPath, `newentry_${concept}_${timeCreated}`);
     }
@@ -267,9 +267,9 @@ export class AddonModGlossaryOfflineProvider {
      * @param record Record object
      * @returns Record object with columns parsed.
      */
-    protected parseRecord(record: AddonModGlossaryOfflineEntryDBRecord): AddonModGlossaryOfflineEntry {
+    protected parseRecord(record: AddonModThGlossaryOfflineEntryDBRecord): AddonModThGlossaryOfflineEntry {
         return Object.assign(record, {
-            options: <Record<string, AddonModGlossaryEntryOption>> CoreText.parseJSON(record.options),
+            options: <Record<string, AddonModThGlossaryEntryOption>> CoreText.parseJSON(record.options),
             attachments: record.attachments ?
                 <CoreFileUploaderStoreFilesResult> CoreText.parseJSON(record.attachments) : undefined,
         });
@@ -277,12 +277,12 @@ export class AddonModGlossaryOfflineProvider {
 
 }
 
-export const AddonModGlossaryOffline = makeSingleton(AddonModGlossaryOfflineProvider);
+export const AddonModThGlossaryOffline = makeSingleton(AddonModThGlossaryOfflineProvider);
 
 /**
  * Glossary offline entry with parsed data.
  */
-export type AddonModGlossaryOfflineEntry = Omit<AddonModGlossaryOfflineEntryDBRecord, 'options'|'attachments'> & {
-    options: Record<string, AddonModGlossaryEntryOption>;
+export type AddonModThGlossaryOfflineEntry = Omit<AddonModThGlossaryOfflineEntryDBRecord, 'options'|'attachments'> & {
+    options: Record<string, AddonModThGlossaryEntryOption>;
     attachments?: CoreFileUploaderStoreFilesResult;
 };

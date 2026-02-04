@@ -17,7 +17,7 @@ import { FileEntry } from '@awesome-cordova-plugins/file/ngx';
 import { CoreFileUploader, CoreFileUploaderStoreFilesResult } from '@features/fileuploader/services/fileuploader';
 import { CoreFile } from '@services/file';
 import { CorePromiseUtils } from '@singletons/promise-utils';
-import { AddonModGlossaryOffline } from './glossary-offline';
+import { AddonModThGlossaryOffline } from './thglossary-offline';
 import { makeSingleton } from '@singletons';
 import { CoreFileEntry } from '@services/file-helper';
 
@@ -25,34 +25,34 @@ import { CoreFileEntry } from '@services/file-helper';
  * Helper to gather some common functions for glossary.
  */
 @Injectable({ providedIn: 'root' })
-export class AddonModGlossaryHelperProvider {
+export class AddonModThGlossaryHelperProvider {
 
     /**
      * Delete stored attachment files for a new entry.
      *
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param entryName The name of the entry.
      * @param timeCreated The time the entry was created.
      * @param siteId Site ID. If not defined, current site.
      * @returns Promise resolved when deleted.
      */
-    async deleteStoredFiles(glossaryId: number, entryName: string, timeCreated: number, siteId?: string): Promise<void> {
-        const folderPath = await AddonModGlossaryOffline.getEntryFolder(glossaryId, entryName, timeCreated, siteId);
+    async deleteStoredFiles(thglossaryid: number, entryName: string, timeCreated: number, siteId?: string): Promise<void> {
+        const folderPath = await AddonModThGlossaryOffline.getEntryFolder(thglossaryid, entryName, timeCreated, siteId);
 
         await CorePromiseUtils.ignoreErrors(CoreFile.removeDir(folderPath));
     }
 
     /**
-     * Get a list of stored attachment files for a new entry. See AddonModGlossaryHelperProvider#storeFiles.
+     * Get a list of stored attachment files for a new entry. See AddonModThGlossaryHelperProvider#storeFiles.
      *
-     * @param glossaryId lossary ID.
+     * @param thglossaryid lossary ID.
      * @param entryName The name of the entry.
      * @param timeCreated The time the entry was created.
      * @param siteId Site ID. If not defined, current site.
      * @returns Promise resolved with the files.
      */
-    async getStoredFiles(glossaryId: number, entryName: string, timeCreated: number, siteId?: string): Promise<FileEntry[]> {
-        const folderPath = await AddonModGlossaryOffline.getEntryFolder(glossaryId, entryName, timeCreated, siteId);
+    async getStoredFiles(thglossaryid: number, entryName: string, timeCreated: number, siteId?: string): Promise<FileEntry[]> {
+        const folderPath = await AddonModThGlossaryOffline.getEntryFolder(thglossaryid, entryName, timeCreated, siteId);
 
         return CoreFileUploader.getStoredFiles(folderPath);
     }
@@ -61,7 +61,7 @@ export class AddonModGlossaryHelperProvider {
      * Given a list of files (either online files or local files), store the local files in a local folder
      * to be submitted later.
      *
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param entryName The name of the entry.
      * @param timeCreated The time the entry was created.
      * @param files List of files.
@@ -69,18 +69,18 @@ export class AddonModGlossaryHelperProvider {
      * @returns Promise resolved if success, rejected otherwise.
      */
     async storeFiles(
-        glossaryId: number,
+        thglossaryid: number,
         entryName: string,
         timeCreated: number,
         files: CoreFileEntry[],
         siteId?: string,
     ): Promise<CoreFileUploaderStoreFilesResult> {
         // Get the folder where to store the files.
-        const folderPath = await AddonModGlossaryOffline.getEntryFolder(glossaryId, entryName, timeCreated, siteId);
+        const folderPath = await AddonModThGlossaryOffline.getEntryFolder(thglossaryid, entryName, timeCreated, siteId);
 
         return CoreFileUploader.storeFilesToUpload(folderPath, files);
     }
 
 }
 
-export const AddonModGlossaryHelper = makeSingleton(AddonModGlossaryHelperProvider);
+export const AddonModThGlossaryHelper = makeSingleton(AddonModThGlossaryHelperProvider);

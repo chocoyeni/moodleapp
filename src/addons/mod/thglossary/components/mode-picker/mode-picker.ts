@@ -14,25 +14,26 @@
 
 import { Component, Input, OnInit } from '@angular/core';
 import { PopoverController } from '@singletons';
-import { AddonModGlossaryFetchMode } from '../../classes/glossary-entries-source';
+import { AddonModThGlossaryFetchMode } from '../../classes/thglossary-entries-source';
 import { CoreSharedModule } from '@/core/shared.module';
 
 /**
  * Component to display the mode picker.
  */
 @Component({
-    selector: 'addon-mod-glossary-mode-picker-popover',
-    templateUrl: 'addon-mod-glossary-mode-picker.html',
+    selector: 'addon-mod-th-glossary-mode-picker-popover',
+    templateUrl: 'addon-mod-th-glossary-mode-picker.html',
+    standalone: true,
     imports: [
         CoreSharedModule,
     ],
 })
-export class AddonModGlossaryModePickerPopoverComponent implements OnInit {
+export class AddonModThGlossaryModePickerPopoverComponent implements OnInit {
 
     @Input() browseModes: string[] = [];
     @Input() selectedMode = '';
 
-    modes: { key: AddonModGlossaryFetchMode; langkey: string }[] = [];
+    modes: { key: AddonModThGlossaryFetchMode; langkey: string }[] = [];
 
     /**
      * @inheritdoc
@@ -41,17 +42,17 @@ export class AddonModGlossaryModePickerPopoverComponent implements OnInit {
         this.browseModes.forEach((mode) => {
             switch (mode) {
                 case 'letter' :
-                    this.modes.push({ key: 'letter_all', langkey: 'addon.mod_glossary.byalphabet' });
+                    this.modes.push({ key: 'letter_all', langkey: 'addon.mod_thglossary.byalphabet' });
                     break;
                 case 'cat' :
-                    this.modes.push({ key: 'cat_all', langkey: 'addon.mod_glossary.bycategory' });
+                    this.modes.push({ key: 'cat_all', langkey: 'addon.mod_thglossary.bycategory' });
                     break;
                 case 'date' :
-                    this.modes.push({ key: 'newest_first', langkey: 'addon.mod_glossary.bynewestfirst' });
-                    this.modes.push({ key: 'recently_updated', langkey: 'addon.mod_glossary.byrecentlyupdated' });
+                    this.modes.push({ key: 'newest_first', langkey: 'addon.mod_thglossary.bynewestfirst' });
+                    this.modes.push({ key: 'recently_updated', langkey: 'addon.mod_thglossary.byrecentlyupdated' });
                     break;
                 case 'author' :
-                    this.modes.push({ key: 'author_all', langkey: 'addon.mod_glossary.byauthor' });
+                    this.modes.push({ key: 'author_all', langkey: 'addon.mod_thglossary.byauthor' });
                     break;
                 default:
             }

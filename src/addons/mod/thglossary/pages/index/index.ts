@@ -12,24 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Component, viewChild } from '@angular/core';
+import { Component, Signal, ViewChild } from '@angular/core';
 import { CoreCourseModuleMainActivityPage } from '@features/course/classes/main-activity-page';
-import { AddonModGlossaryIndexComponent } from '../../components/index';
+import { AddonModThGlossaryIndexComponent } from '../../components/index/index';
 import { CoreSharedModule } from '@/core/shared.module';
 
 /**
  * Page that displays a glossary.
  */
 @Component({
-    selector: 'page-addon-mod-glossary-index',
+    selector: 'page-addon-mod-th-glossary-index',
     templateUrl: 'index.html',
+    standalone: true,
     imports: [
         CoreSharedModule,
-        AddonModGlossaryIndexComponent,
+        AddonModThGlossaryIndexComponent,
     ],
 })
-export default class AddonModGlossaryIndexPage extends CoreCourseModuleMainActivityPage<AddonModGlossaryIndexComponent> {
+export default class AddonModThGlossaryIndexPage extends CoreCourseModuleMainActivityPage<AddonModThGlossaryIndexComponent> {
 
-    readonly activityComponent = viewChild.required(AddonModGlossaryIndexComponent);
+    // Override with the correct type expected by the base class.
+    override activityComponent!: Signal<AddonModThGlossaryIndexComponent>;
 
 }

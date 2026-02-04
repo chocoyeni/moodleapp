@@ -25,24 +25,24 @@ import { CoreSync, CoreSyncResult } from '@services/sync';
 import { CoreWSError } from '@classes/errors/wserror';
 import { makeSingleton, Translate } from '@singletons';
 import { CoreEvents } from '@singletons/events';
-import { AddonModGlossary } from './glossary';
-import { AddonModGlossaryHelper } from './glossary-helper';
-import { AddonModGlossaryOffline, AddonModGlossaryOfflineEntry } from './glossary-offline';
+import { AddonModThGlossary } from './thglossary';
+import { AddonModThGlossaryHelper } from './thglossary-helper';
+import { AddonModThGlossaryOffline, AddonModThGlossaryOfflineEntry } from './thglossary-offline';
 import { CoreFileUploader } from '@features/fileuploader/services/fileuploader';
 import { CoreFileEntry } from '@services/file-helper';
-import { ADDON_MOD_GLOSSARY_COMPONENT, ADDON_MOD_GLOSSARY_COMPONENT_LEGACY, GLOSSARY_AUTO_SYNCED } from '../constants';
+import { ADDON_MOD_TH_GLOSSARY_COMPONENT, ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY, GLOSSARY_AUTO_SYNCED } from '../constants';
 import { CorePromiseUtils } from '@singletons/promise-utils';
 
 /**
  * Service to sync glossaries.
  */
 @Injectable({ providedIn: 'root' })
-export class AddonModGlossarySyncProvider extends CoreCourseActivitySyncBaseProvider<AddonModGlossarySyncResult> {
+export class AddonModThGlossarySyncProvider extends CoreCourseActivitySyncBaseProvider<AddonModThGlossarySyncResult> {
 
     protected componentTranslatableString = 'glossary';
 
     constructor() {
-        super('AddonModGlossarySyncProvider');
+        super('AddonModThGlossarySyncProvider');
     }
 
     /**
@@ -77,26 +77,26 @@ export class AddonModGlossarySyncProvider extends CoreCourseActivitySyncBaseProv
      * @param siteId Site ID to sync.
      */
     protected async syncAllGlossariesEntries(force: boolean, siteId: string): Promise<void> {
-        const entries = await AddonModGlossaryOffline.getAllOfflineEntries(siteId);
+        const entries = await AddonModThGlossaryOffline.getAllOfflineEntries(siteId);
 
         // Do not sync same glossary twice.
         const treated: Record<number, boolean> = {};
 
         await Promise.all(entries.map(async (entry) => {
-            if (treated[entry.glossaryid]) {
+            if (treated[entry.thglossaryid]) {
                 return;
             }
 
-            treated[entry.glossaryid] = true;
+            treated[entry.thglossaryid] = true;
 
             const result = force ?
-                await this.syncGlossaryEntries(entry.glossaryid, entry.userid, siteId) :
-                await this.syncGlossaryEntriesIfNeeded(entry.glossaryid, entry.userid, siteId);
+                await this.syncGlossaryEntries(entry.thglossaryid, entry.userid, siteId) :
+                await this.syncGlossaryEntriesIfNeeded(entry.thglossaryid, entry.userid, siteId);
 
             if (result?.updated) {
                 // Sync successful, send event.
                 CoreEvents.trigger(GLOSSARY_AUTO_SYNCED, {
-                    glossaryId: entry.glossaryid,
+                    thglossaryid: entry.thglossaryid,
                     userId: entry.userid,
                     warnings: result.warnings,
                 }, siteId);
@@ -107,40 +107,40 @@ export class AddonModGlossarySyncProvider extends CoreCourseActivitySyncBaseProv
     /**
      * Sync a glossary only if a certain time has passed since the last time.
      *
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param userId User the entry belong to.
      * @param siteId Site ID. If not defined, current site.
      * @returns Promise resolved when the glossary is synced or if it doesn't need to be synced.
      */
     async syncGlossaryEntriesIfNeeded(
-        glossaryId: number,
+        thglossaryid: number,
         userId: number,
         siteId?: string,
-    ): Promise<AddonModGlossarySyncResult | undefined> {
+    ): Promise<AddonModThGlossarySyncResult | undefined> {
         siteId = siteId || CoreSites.getCurrentSiteId();
 
-        const syncId = this.getGlossarySyncId(glossaryId, userId);
+        const syncId = this.getGlossarySyncId(thglossaryid, userId);
 
         const needed = await this.isSyncNeeded(syncId, siteId);
 
         if (needed) {
-            return this.syncGlossaryEntries(glossaryId, userId, siteId);
+            return this.syncGlossaryEntries(thglossaryid, userId, siteId);
         }
     }
 
     /**
      * Synchronize all offline entries of a glossary.
      *
-     * @param glossaryId Glossary ID to be synced.
+     * @param thglossaryid Glossary ID to be synced.
      * @param userId User the entries belong to.
      * @param siteId Site ID. If not defined, current site.
      * @returns Promise resolved if sync is successful, rejected otherwise.
      */
-    syncGlossaryEntries(glossaryId: number, userId?: number, siteId?: string): Promise<AddonModGlossarySyncResult> {
+    syncGlossaryEntries(thglossaryid: number, userId?: number, siteId?: string): Promise<AddonModThGlossarySyncResult> {
         userId = userId || CoreSites.getCurrentSiteUserId();
         siteId = siteId || CoreSites.getCurrentSiteId();
 
-        const syncId = this.getGlossarySyncId(glossaryId, userId);
+        const syncId = this.getGlossarySyncId(thglossaryid, userId);
         const currentSyncPromise = this.getOngoingSync(syncId, siteId);
         if (currentSyncPromise) {
             // There's already a sync ongoing for this glossary, return the promise.
@@ -148,39 +148,39 @@ export class AddonModGlossarySyncProvider extends CoreCourseActivitySyncBaseProv
         }
 
         // Verify that glossary isn't blocked.
-        if (CoreSync.isBlocked(ADDON_MOD_GLOSSARY_COMPONENT, syncId, siteId)) {
-            this.logger.debug(`Cannot sync glossary ${glossaryId} because it is blocked.`);
+        if (CoreSync.isBlocked(ADDON_MOD_TH_GLOSSARY_COMPONENT, syncId, siteId)) {
+            this.logger.debug(`Cannot sync glossary ${thglossaryid} because it is blocked.`);
 
             throw new CoreSyncBlockedError(Translate.instant('core.errorsyncblocked', { $a: this.componentTranslate }));
         }
 
-        this.logger.debug(`Try to sync glossary ${glossaryId} for user ${userId}`);
+        this.logger.debug(`Try to sync glossary ${thglossaryid} for user ${userId}`);
 
-        const syncPromise = this.performSyncGlossaryEntries(glossaryId, userId, siteId);
+        const syncPromise = this.performSyncGlossaryEntries(thglossaryid, userId, siteId);
 
         return this.addOngoingSync(syncId, syncPromise, siteId);
     }
 
     protected async performSyncGlossaryEntries(
-        glossaryId: number,
+        thglossaryid: number,
         userId: number,
         siteId: string,
-    ): Promise<AddonModGlossarySyncResult> {
-        const result: AddonModGlossarySyncResult = {
+    ): Promise<AddonModThGlossarySyncResult> {
+        const result: AddonModThGlossarySyncResult = {
             warnings: [],
             updated: false,
         };
-        const syncId = this.getGlossarySyncId(glossaryId, userId);
+        const syncId = this.getGlossarySyncId(thglossaryid, userId);
 
         // Sync offline logs.
         await CorePromiseUtils.ignoreErrors(
-            CoreCourseLogHelper.syncActivity(ADDON_MOD_GLOSSARY_COMPONENT_LEGACY, glossaryId, siteId),
+            CoreCourseLogHelper.syncActivity(ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY, thglossaryid, siteId),
         );
 
         // Get offline responses to be sent.
         const entries = await CorePromiseUtils.ignoreErrors(
-            AddonModGlossaryOffline.getGlossaryOfflineEntries(glossaryId, siteId, userId),
-            <AddonModGlossaryOfflineEntry[]> [],
+            AddonModThGlossaryOffline.getGlossaryOfflineEntries(thglossaryid, siteId, userId),
+            <AddonModThGlossaryOfflineEntry[]> [],
         );
 
         if (!entries.length) {
@@ -200,14 +200,14 @@ export class AddonModGlossarySyncProvider extends CoreCourseActivitySyncBaseProv
 
             try {
                 // First of all upload the attachments (if any).
-                const itemId = await this.uploadAttachments(glossaryId, data, siteId);
+                const itemId = await this.uploadAttachments(thglossaryid, data, siteId);
 
                 // Now try to add the entry.
-                await AddonModGlossary.addEntryOnline(glossaryId, data.concept, data.definition, data.options, itemId, siteId);
+                await AddonModThGlossary.addEntryOnline(thglossaryid, data.concept, data.definition, data.options, itemId, siteId);
 
                 result.updated = true;
 
-                await this.deleteAddEntry(glossaryId, data.concept, data.timecreated, siteId);
+                await this.deleteAddEntry(thglossaryid, data.concept, data.timecreated, siteId);
             } catch (error) {
                 if (!CoreWSError.isWebServiceError(error)) {
                     // Couldn't connect to server, reject.
@@ -217,7 +217,7 @@ export class AddonModGlossarySyncProvider extends CoreCourseActivitySyncBaseProv
                 // The WebService has thrown an error, this means that responses cannot be submitted. Delete them.
                 result.updated = true;
 
-                await this.deleteAddEntry(glossaryId, data.concept, data.timecreated, siteId);
+                await this.deleteAddEntry(thglossaryid, data.concept, data.timecreated, siteId);
 
                 // Responses deleted, add a warning.
                 this.addOfflineDataDeletedWarning(result.warnings, data.concept, error);
@@ -227,9 +227,9 @@ export class AddonModGlossarySyncProvider extends CoreCourseActivitySyncBaseProv
         if (result.updated && courseId) {
             // Data has been sent to server. Now invalidate the WS calls.
             try {
-                const glossary = await AddonModGlossary.getGlossaryById(courseId, glossaryId);
+                const glossary = await AddonModThGlossary.getGlossaryById(courseId, thglossaryid);
 
-                await AddonModGlossary.invalidateGlossaryEntries(glossary, true);
+                await AddonModThGlossary.invalidateGlossaryEntries(glossary, true);
             } catch {
                 // Ignore errors.
             }
@@ -249,10 +249,10 @@ export class AddonModGlossarySyncProvider extends CoreCourseActivitySyncBaseProv
      * @param siteId Site ID. If not defined, current site.
      * @returns Promise resolved if sync is successful, rejected otherwise.
      */
-    async syncRatings(cmId?: number, force?: boolean, siteId?: string): Promise<AddonModGlossarySyncResult> {
+    async syncRatings(cmId?: number, force?: boolean, siteId?: string): Promise<AddonModThGlossarySyncResult> {
         siteId = siteId || CoreSites.getCurrentSiteId();
 
-        const results = await CoreRatingSync.syncRatings('mod_glossary', 'entry', ContextLevel.MODULE, cmId, 0, force, siteId);
+        const results = await CoreRatingSync.syncRatings('mod_thglossary', 'entry', ContextLevel.MODULE, cmId, 0, force, siteId);
 
         let updated = false;
         const warnings: string[] = [];
@@ -262,11 +262,11 @@ export class AddonModGlossarySyncProvider extends CoreCourseActivitySyncBaseProv
                 updated = true;
 
                 // Invalidate entry of updated ratings.
-                await Promise.all(result.updated.map((itemId) => AddonModGlossary.invalidateEntry(itemId, siteId)));
+                await Promise.all(result.updated.map((itemId) => AddonModThGlossary.invalidateEntry(itemId, siteId)));
             }
 
             if (result.warnings.length) {
-                const glossary = await AddonModGlossary.getGlossary(result.itemSet.courseId, result.itemSet.instanceId, { siteId });
+                const glossary = await AddonModThGlossary.getGlossary(result.itemSet.courseId, result.itemSet.instanceId, { siteId });
 
                 result.warnings.forEach((warning) => {
                     this.addOfflineDataDeletedWarning(warnings, glossary.name, warning);
@@ -280,27 +280,27 @@ export class AddonModGlossarySyncProvider extends CoreCourseActivitySyncBaseProv
     /**
      * Delete a new entry.
      *
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param concept Glossary entry concept.
      * @param timeCreated Time to allow duplicated entries.
      * @param siteId Site ID. If not defined, current site.
      */
-    protected async deleteAddEntry(glossaryId: number, concept: string, timeCreated: number, siteId?: string): Promise<void> {
+    protected async deleteAddEntry(thglossaryid: number, concept: string, timeCreated: number, siteId?: string): Promise<void> {
         await Promise.all([
-            AddonModGlossaryOffline.deleteOfflineEntry(glossaryId, timeCreated, siteId),
-            AddonModGlossaryHelper.deleteStoredFiles(glossaryId, concept, timeCreated, siteId),
+            AddonModThGlossaryOffline.deleteOfflineEntry(thglossaryid, timeCreated, siteId),
+            AddonModThGlossaryHelper.deleteStoredFiles(thglossaryid, concept, timeCreated, siteId),
         ]);
     }
 
     /**
      * Upload attachments of an offline entry.
      *
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param entry Offline entry.
      * @param siteId Site ID. If not defined, current site.
      * @returns Promise resolved with draftid if uploaded, resolved with 0 if nothing to upload.
      */
-    protected async uploadAttachments(glossaryId: number, entry: AddonModGlossaryOfflineEntry, siteId?: string): Promise<number> {
+    protected async uploadAttachments(thglossaryid: number, entry: AddonModThGlossaryOfflineEntry, siteId?: string): Promise<number> {
         if (!entry.attachments) {
             // No attachments.
             return 0;
@@ -312,32 +312,32 @@ export class AddonModGlossarySyncProvider extends CoreCourseActivitySyncBaseProv
         if (entry.attachments.offline) {
             // Has offline files.
             const storedFiles = await CorePromiseUtils.ignoreErrors(
-                AddonModGlossaryHelper.getStoredFiles(glossaryId, entry.concept, entry.timecreated, siteId),
+                AddonModThGlossaryHelper.getStoredFiles(thglossaryid, entry.concept, entry.timecreated, siteId),
                 [], // Folder not found, no files to add.
             );
 
             files = files.concat(storedFiles);
         }
 
-        return CoreFileUploader.uploadOrReuploadFiles(files, ADDON_MOD_GLOSSARY_COMPONENT_LEGACY, glossaryId, siteId);
+        return CoreFileUploader.uploadOrReuploadFiles(files, ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY, thglossaryid, siteId);
     }
 
     /**
      * Get the ID of a glossary sync.
      *
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param userId User the entries belong to.. If not defined, current user.
      * @returns Sync ID.
      */
-    protected getGlossarySyncId(glossaryId: number, userId?: number): string {
+    protected getGlossarySyncId(thglossaryid: number, userId?: number): string {
         userId = userId || CoreSites.getCurrentSiteUserId();
 
-        return `glossary#${glossaryId}#${userId}`;
+        return `glossary#${thglossaryid}#${userId}`;
     }
 
 }
 
-export const AddonModGlossarySync = makeSingleton(AddonModGlossarySyncProvider);
+export const AddonModThGlossarySync = makeSingleton(AddonModThGlossarySyncProvider);
 
 declare module '@singletons/events' {
 
@@ -347,7 +347,7 @@ declare module '@singletons/events' {
      * @see https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation
      */
     export interface CoreEventsData {
-        [GLOSSARY_AUTO_SYNCED]: AddonModGlossaryAutoSyncedData;
+        [GLOSSARY_AUTO_SYNCED]: AddonModThGlossaryAutoSyncedData;
     }
 
 }
@@ -355,13 +355,13 @@ declare module '@singletons/events' {
 /**
  * Data returned by a glossary sync.
  */
-export type AddonModGlossarySyncResult = CoreSyncResult;
+export type AddonModThGlossarySyncResult = CoreSyncResult;
 
 /**
  * Data passed to GLOSSARY_AUTO_SYNCED event.
  */
-export type AddonModGlossaryAutoSyncedData = {
-    glossaryId: number;
+export type AddonModThGlossaryAutoSyncedData = {
+    thglossaryid: number;
     userId: number;
     warnings: string[];
 };

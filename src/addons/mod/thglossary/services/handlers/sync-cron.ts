@@ -15,30 +15,30 @@
 import { Injectable } from '@angular/core';
 import { CoreCronHandler } from '@services/cron';
 import { makeSingleton } from '@singletons';
-import { AddonModGlossarySync } from '../glossary-sync';
+import { AddonModThGlossarySync } from '../thglossary-sync';
 
 /**
  * Synchronization cron handler.
  */
 @Injectable({ providedIn: 'root' })
-export class AddonModGlossarySyncCronHandlerService implements CoreCronHandler {
+export class AddonModThGlossarySyncCronHandlerService implements CoreCronHandler {
 
-    name = 'AddonModGlossarySyncCronHandler';
+    name = 'AddonModThGlossarySyncCronHandler';
 
     /**
      * @inheritdoc
      */
     execute(siteId?: string, force?: boolean): Promise<void> {
-        return AddonModGlossarySync.syncAllGlossaries(siteId, force);
+        return AddonModThGlossarySync.syncAllGlossaries(siteId, force);
     }
 
     /**
      * @inheritdoc
      */
     getInterval(): number {
-        return AddonModGlossarySync.syncInterval;
+        return AddonModThGlossarySync.syncInterval;
     }
 
 }
 
-export const AddonModGlossarySyncCronHandler = makeSingleton(AddonModGlossarySyncCronHandlerService);
+export const AddonModThGlossarySyncCronHandler = makeSingleton(AddonModThGlossarySyncCronHandlerService);

@@ -26,16 +26,16 @@ import { CoreObject } from '@singletons/object';
 import { CoreWSExternalFile, CoreWSExternalWarning } from '@services/ws';
 import { makeSingleton, Translate } from '@singletons';
 import { CoreEvents } from '@singletons/events';
-import { AddonModGlossaryEntryDBRecord, ENTRIES_TABLE_NAME } from './database/glossary';
-import { AddonModGlossaryOffline } from './glossary-offline';
+import { AddonModThGlossaryEntryDBRecord, ENTRIES_TABLE_NAME } from './database/thglossary';
+import { AddonModThGlossaryOffline } from './thglossary-offline';
 import { CoreSiteWSPreSets } from '@classes/sites/authenticated-site';
 import {
-    ADDON_MOD_GLOSSARY_COMPONENT_LEGACY,
-    ADDON_MOD_GLOSSARY_ENTRY_ADDED,
-    ADDON_MOD_GLOSSARY_ENTRY_DELETED,
-    ADDON_MOD_GLOSSARY_ENTRY_UPDATED,
-    ADDON_MOD_GLOSSARY_LIMIT_CATEGORIES,
-    ADDON_MOD_GLOSSARY_LIMIT_ENTRIES,
+    ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY,
+    ADDON_MOD_TH_GLOSSARY_ENTRY_ADDED,
+    ADDON_MOD_TH_GLOSSARY_ENTRY_DELETED,
+    ADDON_MOD_TH_GLOSSARY_ENTRY_UPDATED,
+    ADDON_MOD_TH_GLOSSARY_LIMIT_CATEGORIES,
+    ADDON_MOD_TH_GLOSSARY_LIMIT_ENTRIES,
 } from '../constants';
 import { CoreCacheUpdateFrequency } from '@/core/constants';
 import { CorePromiseUtils } from '@singletons/promise-utils';
@@ -47,10 +47,10 @@ import { CoreCourseModuleHelper, CoreCourseModuleStandardElements } from '@featu
  * Service that provides some features for glossaries.
  */
 @Injectable({ providedIn: 'root' })
-export class AddonModGlossaryProvider {
+export class AddonModThGlossaryProvider {
 
     protected static readonly SHOW_ALL_CATEGORIES = 0;
-    protected static readonly ROOT_CACHE_KEY = 'mmaModGlossary:';
+    protected static readonly ROOT_CACHE_KEY = 'mmaModThGlossary:';
 
     /**
      * Get the course glossary cache key.
@@ -59,7 +59,7 @@ export class AddonModGlossaryProvider {
      * @returns Cache key.
      */
     protected getCourseGlossariesCacheKey(courseId: number): string {
-        return `${AddonModGlossaryProvider.ROOT_CACHE_KEY}courseGlossaries:${courseId}`;
+        return `${AddonModThGlossaryProvider.ROOT_CACHE_KEY}courseGlossaries:${courseId}`;
     }
 
     /**
@@ -69,21 +69,21 @@ export class AddonModGlossaryProvider {
      * @param options Other options.
      * @returns Resolved with the glossaries.
      */
-    async getCourseGlossaries(courseId: number, options: CoreSitesCommonWSOptions = {}): Promise<AddonModGlossaryGlossary[]> {
+    async getCourseGlossaries(courseId: number, options: CoreSitesCommonWSOptions = {}): Promise<AddonModThGlossaryGlossary[]> {
         const site = await CoreSites.getSite(options.siteId);
 
-        const params: AddonModGlossaryGetGlossariesByCoursesWSParams = {
+        const params: AddonModThGlossaryGetGlossariesByCoursesWSParams = {
             courseids: [courseId],
         };
         const preSets: CoreSiteWSPreSets = {
             cacheKey: this.getCourseGlossariesCacheKey(courseId),
             updateFrequency: CoreCacheUpdateFrequency.RARELY,
-            component: ADDON_MOD_GLOSSARY_COMPONENT_LEGACY,
+            component: ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY,
             ...CoreSites.getReadingStrategyPreSets(options.readingStrategy), // Include reading strategy preSets.
         };
 
-        const result = await site.read<AddonModGlossaryGetGlossariesByCoursesWSResponse>(
-            'mod_glossary_get_glossaries_by_courses',
+        const result = await site.read<AddonModThGlossaryGetGlossariesByCoursesWSResponse>(
+            'mod_thglossary_get_glossaries_by_courses',
             params,
             preSets,
         );
@@ -108,55 +108,55 @@ export class AddonModGlossaryProvider {
     /**
      * Get the entries by author cache key.
      *
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @returns Cache key.
      */
-    protected getEntriesByAuthorCacheKey(glossaryId: number): string {
-        return `${AddonModGlossaryProvider.ROOT_CACHE_KEY}entriesByAuthor:${glossaryId}:ALL:LASTNAME:ASC`;
+    protected getEntriesByAuthorCacheKey(thglossaryid: number): string {
+        return `${AddonModThGlossaryProvider.ROOT_CACHE_KEY}entriesByAuthor:${thglossaryid}:ALL:LASTNAME:ASC`;
     }
 
     /**
      * Get entries by author.
      *
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @param options Other options.
      * @returns Resolved with the entries.
      */
     async getEntriesByAuthor(
-        glossaryId: number,
-        options: AddonModGlossaryGetEntriesOptions = {},
-    ): Promise<AddonModGlossaryGetEntriesWSResponse> {
+        thglossaryid: number,
+        options: AddonModThGlossaryGetEntriesOptions = {},
+    ): Promise<AddonModThGlossaryGetEntriesWSResponse> {
         const site = await CoreSites.getSite(options.siteId);
 
-        const params: AddonModGlossaryGetEntriesByAuthorWSParams = {
-            id: glossaryId,
+        const params: AddonModThGlossaryGetEntriesByAuthorWSParams = {
+            id: thglossaryid,
             letter: 'ALL',
             field: 'LASTNAME',
             sort: 'ASC',
             from: options.from || 0,
-            limit: options.limit || ADDON_MOD_GLOSSARY_LIMIT_ENTRIES,
+            limit: options.limit || ADDON_MOD_TH_GLOSSARY_LIMIT_ENTRIES,
         };
         const preSets: CoreSiteWSPreSets = {
-            cacheKey: this.getEntriesByAuthorCacheKey(glossaryId),
+            cacheKey: this.getEntriesByAuthorCacheKey(thglossaryid),
             updateFrequency: CoreCacheUpdateFrequency.SOMETIMES,
-            component: ADDON_MOD_GLOSSARY_COMPONENT_LEGACY,
+            component: ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY,
             componentId: options.cmId,
             ...CoreSites.getReadingStrategyPreSets(options.readingStrategy), // Include reading strategy preSets.
         };
 
-        return site.read('mod_glossary_get_entries_by_author', params, preSets);
+        return site.read('mod_thglossary_get_entries_by_author', params, preSets);
     }
 
     /**
      * Invalidate cache of entries by author.
      *
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @param siteId Site ID. If not defined, current site.
      */
-    async invalidateEntriesByAuthor(glossaryId: number, siteId?: string): Promise<void> {
+    async invalidateEntriesByAuthor(thglossaryid: number, siteId?: string): Promise<void> {
         const site = await CoreSites.getSite(siteId);
 
-        const key = this.getEntriesByAuthorCacheKey(glossaryId);
+        const key = this.getEntriesByAuthorCacheKey(thglossaryid);
 
         await site.invalidateWsCacheForKey(key);
     }
@@ -164,43 +164,43 @@ export class AddonModGlossaryProvider {
     /**
      * Get entries by category.
      *
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @param options Other options.
      * @returns Resolved with the entries.
      */
     async getEntriesByCategory(
-        glossaryId: number,
-        options: AddonModGlossaryGetEntriesOptions = {},
-    ): Promise<AddonModGlossaryGetEntriesByCategoryWSResponse> {
+        thglossaryid: number,
+        options: AddonModThGlossaryGetEntriesOptions = {},
+    ): Promise<AddonModThGlossaryGetEntriesByCategoryWSResponse> {
         const site = await CoreSites.getSite(options.siteId);
 
-        const params: AddonModGlossaryGetEntriesByCategoryWSParams = {
-            id: glossaryId,
-            categoryid: AddonModGlossaryProvider.SHOW_ALL_CATEGORIES,
+        const params: AddonModThGlossaryGetEntriesByCategoryWSParams = {
+            id: thglossaryid,
+            categoryid: AddonModThGlossaryProvider.SHOW_ALL_CATEGORIES,
             from: options.from || 0,
-            limit: options.limit || ADDON_MOD_GLOSSARY_LIMIT_ENTRIES,
+            limit: options.limit || ADDON_MOD_TH_GLOSSARY_LIMIT_ENTRIES,
         };
         const preSets: CoreSiteWSPreSets = {
-            cacheKey: this.getEntriesByCategoryCacheKey(glossaryId),
+            cacheKey: this.getEntriesByCategoryCacheKey(thglossaryid),
             updateFrequency: CoreCacheUpdateFrequency.SOMETIMES,
-            component: ADDON_MOD_GLOSSARY_COMPONENT_LEGACY,
+            component: ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY,
             componentId: options.cmId,
             ...CoreSites.getReadingStrategyPreSets(options.readingStrategy), // Include reading strategy preSets.
         };
 
-        return site.read('mod_glossary_get_entries_by_category', params, preSets);
+        return site.read('mod_thglossary_get_entries_by_category', params, preSets);
     }
 
     /**
      * Invalidate cache of entries by category.
      *
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @param siteId Site ID. If not defined, current site.
      */
-    async invalidateEntriesByCategory(glossaryId: number, siteId?: string): Promise<void> {
+    async invalidateEntriesByCategory(thglossaryid: number, siteId?: string): Promise<void> {
         const site = await CoreSites.getSite(siteId);
 
-        const key = this.getEntriesByCategoryCacheKey(glossaryId);
+        const key = this.getEntriesByCategoryCacheKey(thglossaryid);
 
         await site.invalidateWsCacheForKey(key);
     }
@@ -208,70 +208,70 @@ export class AddonModGlossaryProvider {
     /**
      * Get the entries by category cache key.
      *
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @returns Cache key.
      */
-    getEntriesByCategoryCacheKey(glossaryId: number): string {
-        const prefix = `${AddonModGlossaryProvider.ROOT_CACHE_KEY}entriesByCategory`;
+    getEntriesByCategoryCacheKey(thglossaryid: number): string {
+        const prefix = `${AddonModThGlossaryProvider.ROOT_CACHE_KEY}entriesByCategory`;
 
-        return `${prefix}:${glossaryId}:${AddonModGlossaryProvider.SHOW_ALL_CATEGORIES}`;
+        return `${prefix}:${thglossaryid}:${AddonModThGlossaryProvider.SHOW_ALL_CATEGORIES}`;
     }
 
     /**
      * Get the entries by date cache key.
      *
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @param order The way to order the records.
      * @returns Cache key.
      */
-    getEntriesByDateCacheKey(glossaryId: number, order: string): string {
-        return `${AddonModGlossaryProvider.ROOT_CACHE_KEY}entriesByDate:${glossaryId}:${order}:DESC`;
+    getEntriesByDateCacheKey(thglossaryid: number, order: string): string {
+        return `${AddonModThGlossaryProvider.ROOT_CACHE_KEY}entriesByDate:${thglossaryid}:${order}:DESC`;
     }
 
     /**
      * Get entries by date.
      *
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @param order The way to order the records.
      * @param options Other options.
      * @returns Resolved with the entries.
      */
     async getEntriesByDate(
-        glossaryId: number,
+        thglossaryid: number,
         order: string,
-        options: AddonModGlossaryGetEntriesOptions = {},
-    ): Promise<AddonModGlossaryGetEntriesWSResponse> {
+        options: AddonModThGlossaryGetEntriesOptions = {},
+    ): Promise<AddonModThGlossaryGetEntriesWSResponse> {
         const site = await CoreSites.getSite(options.siteId);
 
-        const params: AddonModGlossaryGetEntriesByDateWSParams = {
-            id: glossaryId,
+        const params: AddonModThGlossaryGetEntriesByDateWSParams = {
+            id: thglossaryid,
             order: order,
             sort: 'DESC',
             from: options.from || 0,
-            limit: options.limit || ADDON_MOD_GLOSSARY_LIMIT_ENTRIES,
+            limit: options.limit || ADDON_MOD_TH_GLOSSARY_LIMIT_ENTRIES,
         };
         const preSets: CoreSiteWSPreSets = {
-            cacheKey: this.getEntriesByDateCacheKey(glossaryId, order),
+            cacheKey: this.getEntriesByDateCacheKey(thglossaryid, order),
             updateFrequency: CoreCacheUpdateFrequency.SOMETIMES,
-            component: ADDON_MOD_GLOSSARY_COMPONENT_LEGACY,
+            component: ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY,
             componentId: options.cmId,
             ...CoreSites.getReadingStrategyPreSets(options.readingStrategy), // Include reading strategy preSets.
         };
 
-        return site.read('mod_glossary_get_entries_by_date', params, preSets);
+        return site.read('mod_thglossary_get_entries_by_date', params, preSets);
     }
 
     /**
      * Invalidate cache of entries by date.
      *
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @param order The way to order the records.
      * @param siteId Site ID. If not defined, current site.
      */
-    async invalidateEntriesByDate(glossaryId: number, order: string, siteId?: string): Promise<void> {
+    async invalidateEntriesByDate(thglossaryid: number, order: string, siteId?: string): Promise<void> {
         const site = await CoreSites.getSite(siteId);
 
-        const key = this.getEntriesByDateCacheKey(glossaryId, order);
+        const key = this.getEntriesByDateCacheKey(thglossaryid, order);
 
         await site.invalidateWsCacheForKey(key);
     }
@@ -279,52 +279,52 @@ export class AddonModGlossaryProvider {
     /**
      * Get the entries by letter cache key.
      *
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @returns Cache key.
      */
-    protected getEntriesByLetterCacheKey(glossaryId: number): string {
-        return `${AddonModGlossaryProvider.ROOT_CACHE_KEY}entriesByLetter:${glossaryId}:ALL`;
+    protected getEntriesByLetterCacheKey(thglossaryid: number): string {
+        return `${AddonModThGlossaryProvider.ROOT_CACHE_KEY}entriesByLetter:${thglossaryid}:ALL`;
     }
 
     /**
      * Get entries by letter.
      *
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @param options Other options.
      * @returns Resolved with the entries.
      */
     async getEntriesByLetter(
-        glossaryId: number,
-        options: AddonModGlossaryGetEntriesOptions = {},
-    ): Promise<AddonModGlossaryGetEntriesWSResponse> {
+        thglossaryid: number,
+        options: AddonModThGlossaryGetEntriesOptions = {},
+    ): Promise<AddonModThGlossaryGetEntriesWSResponse> {
         const from = options.from || 0;
-        const limit = options.limit || ADDON_MOD_GLOSSARY_LIMIT_ENTRIES;
+        const limit = options.limit || ADDON_MOD_TH_GLOSSARY_LIMIT_ENTRIES;
 
         const site = await CoreSites.getSite(options.siteId);
 
-        const params: AddonModGlossaryGetEntriesByLetterWSParams = {
-            id: glossaryId,
+        const params: AddonModThGlossaryGetEntriesByLetterWSParams = {
+            id: thglossaryid,
             letter: 'ALL',
             from,
             limit,
         };
         const preSets: CoreSiteWSPreSets = {
-            cacheKey: this.getEntriesByLetterCacheKey(glossaryId),
+            cacheKey: this.getEntriesByLetterCacheKey(thglossaryid),
             updateFrequency: CoreCacheUpdateFrequency.SOMETIMES,
-            component: ADDON_MOD_GLOSSARY_COMPONENT_LEGACY,
+            component: ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY,
             componentId: options.cmId,
             ...CoreSites.getReadingStrategyPreSets(options.readingStrategy), // Include reading strategy preSets.
         };
 
-        const result = await site.read<AddonModGlossaryGetEntriesWSResponse>(
-            'mod_glossary_get_entries_by_letter',
+        const result = await site.read<AddonModThGlossaryGetEntriesWSResponse>(
+            'mod_thglossary_get_entries_by_letter',
             params,
             preSets,
         );
 
-        if (limit === ADDON_MOD_GLOSSARY_LIMIT_ENTRIES) {
+        if (limit === ADDON_MOD_TH_GLOSSARY_LIMIT_ENTRIES) {
             // Store entries in background, don't block the user for this.
-            CorePromiseUtils.ignoreErrors(this.storeEntries(glossaryId, result.entries, from, site.getId()));
+            CorePromiseUtils.ignoreErrors(this.storeEntries(thglossaryid, result.entries, from, site.getId()));
         }
 
         return result;
@@ -333,13 +333,13 @@ export class AddonModGlossaryProvider {
     /**
      * Invalidate cache of entries by letter.
      *
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @param siteId Site ID. If not defined, current site.
      */
-    async invalidateEntriesByLetter(glossaryId: number, siteId?: string): Promise<void> {
+    async invalidateEntriesByLetter(thglossaryid: number, siteId?: string): Promise<void> {
         const site = await CoreSites.getSite(siteId);
 
-        const key = this.getEntriesByLetterCacheKey(glossaryId);
+        const key = this.getEntriesByLetterCacheKey(thglossaryid);
 
         await site.invalidateWsCacheForKey(key);
     }
@@ -347,69 +347,69 @@ export class AddonModGlossaryProvider {
     /**
      * Get the entries by search cache key.
      *
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @param query The search query.
      * @param fullSearch Whether or not full search is required.
      * @returns Cache key.
      */
-    protected getEntriesBySearchCacheKey(glossaryId: number, query: string, fullSearch: boolean): string {
-        return `${AddonModGlossaryProvider.ROOT_CACHE_KEY}entriesBySearch:${glossaryId}:${fullSearch}:CONCEPT:ASC:${query}`;
+    protected getEntriesBySearchCacheKey(thglossaryid: number, query: string, fullSearch: boolean): string {
+        return `${AddonModThGlossaryProvider.ROOT_CACHE_KEY}entriesBySearch:${thglossaryid}:${fullSearch}:CONCEPT:ASC:${query}`;
     }
 
     /**
      * Get entries by search.
      *
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @param query The search query.
      * @param fullSearch Whether or not full search is required.
      * @param options Get entries options.
      * @returns Resolved with the entries.
      */
     async getEntriesBySearch(
-        glossaryId: number,
+        thglossaryid: number,
         query: string,
         fullSearch: boolean,
-        options: AddonModGlossaryGetEntriesOptions = {},
-    ): Promise<AddonModGlossaryGetEntriesWSResponse> {
+        options: AddonModThGlossaryGetEntriesOptions = {},
+    ): Promise<AddonModThGlossaryGetEntriesWSResponse> {
         const site = await CoreSites.getSite(options.siteId);
 
-        const params: AddonModGlossaryGetEntriesBySearchWSParams = {
-            id: glossaryId,
+        const params: AddonModThGlossaryGetEntriesBySearchWSParams = {
+            id: thglossaryid,
             query: query,
             fullsearch: fullSearch,
             order: 'CONCEPT',
             sort: 'ASC',
             from: options.from || 0,
-            limit: options.limit || ADDON_MOD_GLOSSARY_LIMIT_ENTRIES,
+            limit: options.limit || ADDON_MOD_TH_GLOSSARY_LIMIT_ENTRIES,
         };
         const preSets: CoreSiteWSPreSets = {
-            cacheKey: this.getEntriesBySearchCacheKey(glossaryId, query, fullSearch),
+            cacheKey: this.getEntriesBySearchCacheKey(thglossaryid, query, fullSearch),
             updateFrequency: CoreCacheUpdateFrequency.SOMETIMES,
-            component: ADDON_MOD_GLOSSARY_COMPONENT_LEGACY,
+            component: ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY,
             componentId: options.cmId,
             ...CoreSites.getReadingStrategyPreSets(options.readingStrategy), // Include reading strategy preSets.
         };
 
-        return site.read('mod_glossary_get_entries_by_search', params, preSets);
+        return site.read('mod_thglossary_get_entries_by_search', params, preSets);
     }
 
     /**
      * Invalidate cache of entries by search.
      *
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @param query The search query.
      * @param fullSearch Whether or not full search is required.
      * @param siteId Site ID. If not defined, current site.
      */
     async invalidateEntriesBySearch(
-        glossaryId: number,
+        thglossaryid: number,
         query: string,
         fullSearch: boolean,
         siteId?: string,
     ): Promise<void> {
         const site = await CoreSites.getSite(siteId);
 
-        const key = this.getEntriesBySearchCacheKey(glossaryId, query, fullSearch);
+        const key = this.getEntriesBySearchCacheKey(thglossaryid, query, fullSearch);
 
         await site.invalidateWsCacheForKey(key);
     }
@@ -417,63 +417,63 @@ export class AddonModGlossaryProvider {
     /**
      * Get the glossary categories cache key.
      *
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @returns The cache key.
      */
-    protected getCategoriesCacheKey(glossaryId: number): string {
-        return `${AddonModGlossaryProvider.ROOT_CACHE_KEY}categories:${glossaryId}`;
+    protected getCategoriesCacheKey(thglossaryid: number): string {
+        return `${AddonModThGlossaryProvider.ROOT_CACHE_KEY}categories:${thglossaryid}`;
     }
 
     /**
      * Get all the categories related to the glossary.
      *
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @param options Other options.
      * @returns Promise resolved with the categories if supported or empty array if not.
      */
-    async getAllCategories(glossaryId: number, options: CoreCourseCommonModWSOptions = {}): Promise<AddonModGlossaryCategory[]> {
+    async getAllCategories(thglossaryid: number, options: CoreCourseCommonModWSOptions = {}): Promise<AddonModThGlossaryCategory[]> {
         const site = await CoreSites.getSite(options.siteId);
 
-        return this.getCategories(glossaryId, [], site, options);
+        return this.getCategories(thglossaryid, [], site, options);
     }
 
     /**
      * Get the categories related to the glossary by sections. It's a recursive function see initial call values.
      *
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @param categories Already fetched categories where to append the fetch.
      * @param site Site object.
      * @param options Other options.
      * @returns Promise resolved with the categories.
      */
     protected async getCategories(
-        glossaryId: number,
-        categories: AddonModGlossaryCategory[],
+        thglossaryid: number,
+        categories: AddonModThGlossaryCategory[],
         site: CoreSite,
-        options: AddonModGlossaryGetCategoriesOptions = {},
-    ): Promise<AddonModGlossaryCategory[]> {
+        options: AddonModThGlossaryGetCategoriesOptions = {},
+    ): Promise<AddonModThGlossaryCategory[]> {
         const from = options.from || 0;
-        const limit = options.limit || ADDON_MOD_GLOSSARY_LIMIT_CATEGORIES;
+        const limit = options.limit || ADDON_MOD_TH_GLOSSARY_LIMIT_CATEGORIES;
 
-        const params: AddonModGlossaryGetCategoriesWSParams = {
-            id: glossaryId,
+        const params: AddonModThGlossaryGetCategoriesWSParams = {
+            id: thglossaryid,
             from,
             limit,
         };
         const preSets: CoreSiteWSPreSets = {
-            cacheKey: this.getCategoriesCacheKey(glossaryId),
+            cacheKey: this.getCategoriesCacheKey(thglossaryid),
             updateFrequency: CoreCacheUpdateFrequency.SOMETIMES,
-            component: ADDON_MOD_GLOSSARY_COMPONENT_LEGACY,
+            component: ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY,
             componentId: options.cmId,
             ...CoreSites.getReadingStrategyPreSets(options.readingStrategy), // Include reading strategy preSets.
         };
 
-        const response = await site.read<AddonModGlossaryGetCategoriesWSResponse>('mod_glossary_get_categories', params, preSets);
+        const response = await site.read<AddonModThGlossaryGetCategoriesWSResponse>('mod_thglossary_get_categories', params, preSets);
 
         categories = categories.concat(response.categories);
         const canLoadMore = (from + limit) < response.count;
         if (canLoadMore) {
-            return this.getCategories(glossaryId, categories, site, {
+            return this.getCategories(thglossaryid, categories, site, {
                 ...options,
                 from: from + limit,
             });
@@ -485,13 +485,13 @@ export class AddonModGlossaryProvider {
     /**
      * Invalidate cache of categories by glossary id.
      *
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @param siteId Site ID. If not defined, current site.
      */
-    async invalidateCategories(glossaryId: number, siteId?: string): Promise<void> {
+    async invalidateCategories(thglossaryid: number, siteId?: string): Promise<void> {
         const site = await CoreSites.getSite(siteId);
 
-        await site.invalidateWsCacheForKey(this.getCategoriesCacheKey(glossaryId));
+        await site.invalidateWsCacheForKey(this.getCategoriesCacheKey(thglossaryid));
     }
 
     /**
@@ -501,7 +501,7 @@ export class AddonModGlossaryProvider {
      * @returns Cache key.
      */
     protected getEntryCacheKey(entryId: number): string {
-        return `${AddonModGlossaryProvider.ROOT_CACHE_KEY}getEntry:${entryId}`;
+        return `${AddonModThGlossaryProvider.ROOT_CACHE_KEY}getEntry:${entryId}`;
     }
 
     /**
@@ -511,16 +511,16 @@ export class AddonModGlossaryProvider {
      * @param options Other options.
      * @returns Promise resolved with the entry.
      */
-    async getEntry(entryId: number, options: AddonModGlossaryGetEntryOptions = {}): Promise<AddonModGlossaryGetEntryByIdResponse> {
+    async getEntry(entryId: number, options: AddonModThGlossaryGetEntryOptions = {}): Promise<AddonModThGlossaryGetEntryByIdResponse> {
         const site = await CoreSites.getSite(options.siteId);
 
-        const params: AddonModGlossaryGetEntryByIdWSParams = {
+        const params: AddonModThGlossaryGetEntryByIdWSParams = {
             id: entryId,
         };
         const preSets = {
             cacheKey: this.getEntryCacheKey(entryId),
             updateFrequency: CoreCacheUpdateFrequency.RARELY,
-            component: ADDON_MOD_GLOSSARY_COMPONENT_LEGACY,
+            component: ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY,
             componentId: options.cmId,
             ...CoreSites.getReadingStrategyPreSets(options.readingStrategy), // Include reading strategy preSets.
             filter: options.filter !== false,
@@ -528,7 +528,7 @@ export class AddonModGlossaryProvider {
         };
 
         try {
-            return await site.read<AddonModGlossaryGetEntryByIdWSResponse>('mod_glossary_get_entry_by_id', params, preSets);
+            return await site.read<AddonModThGlossaryGetEntryByIdWSResponse>('mod_thglossary_get_entry_by_id', params, preSets);
         } catch (error) {
             if (!preSets.getFromCache) {
                 // Cache disabled, throw the error instead of returning the cached data from the list of entries.
@@ -541,7 +541,7 @@ export class AddonModGlossaryProvider {
 
                 if (data.from !== undefined) {
                     const response = await CorePromiseUtils.ignoreErrors(
-                        this.getEntryFromList(data.glossaryId, entryId, data.from, false, options),
+                        this.getEntryFromList(data.thglossaryid, entryId, data.from, false, options),
                     );
 
                     if (response) {
@@ -550,7 +550,7 @@ export class AddonModGlossaryProvider {
                 }
 
                 // Page not specified or entry not found in the page, search all pages.
-                return await this.getEntryFromList(data.glossaryId, entryId, 0, true, options);
+                return await this.getEntryFromList(data.thglossaryid, entryId, 0, true, options);
             } catch {
                 throw error;
             }
@@ -564,17 +564,17 @@ export class AddonModGlossaryProvider {
      * @param siteId Site ID. If not defined, current site.
      * @returns Promise resolved with the glossary ID and the "from".
      */
-    async getStoredDataForEntry(entryId: number, siteId?: string): Promise<{glossaryId: number; from: number}> {
+    async getStoredDataForEntry(entryId: number, siteId?: string): Promise<{thglossaryid: number; from: number}> {
         const site = await CoreSites.getSite(siteId);
 
-        const conditions: Partial<AddonModGlossaryEntryDBRecord> = {
+        const conditions: Partial<AddonModThGlossaryEntryDBRecord> = {
             entryid: entryId,
         };
 
-        const record = await site.getDb().getRecord<AddonModGlossaryEntryDBRecord>(ENTRIES_TABLE_NAME, conditions);
+        const record = await site.getDb().getRecord<AddonModThGlossaryEntryDBRecord>(ENTRIES_TABLE_NAME, conditions);
 
         return {
-            glossaryId: record.glossaryid,
+            thglossaryid: record.thglossaryid,
             from: record.pagefrom,
         };
     }
@@ -582,7 +582,7 @@ export class AddonModGlossaryProvider {
     /**
      * Get an entry from the list of entries.
      *
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param entryId Entry ID.
      * @param from Page to get.
      * @param loadNext Whether to load next pages if not found.
@@ -590,14 +590,14 @@ export class AddonModGlossaryProvider {
      * @returns Promise resolved with the entry data.
      */
     protected async getEntryFromList(
-        glossaryId: number,
+        thglossaryid: number,
         entryId: number,
         from: number,
         loadNext: boolean,
         options: CoreCourseCommonModWSOptions = {},
-    ): Promise<AddonModGlossaryGetEntryByIdResponse> {
+    ): Promise<AddonModThGlossaryGetEntryByIdResponse> {
         // Get the entries from this "page" and check if the entry we're looking for is in it.
-        const result = await this.getEntriesByLetter(glossaryId, {
+        const result = await this.getEntriesByLetter(thglossaryid, {
             from: from,
             readingStrategy: CoreSitesReadingStrategy.ONLY_CACHE,
             cmId: options.cmId,
@@ -614,7 +614,7 @@ export class AddonModGlossaryProvider {
         const nextFrom = from + result.entries.length;
         if (nextFrom < result.count && loadNext) {
             // Get the next "page".
-            return this.getEntryFromList(glossaryId, entryId, nextFrom, true, options);
+            return this.getEntryFromList(thglossaryid, entryId, nextFrom, true, options);
         }
 
         // No more pages and the entry wasn't found. Reject.
@@ -630,7 +630,7 @@ export class AddonModGlossaryProvider {
     async canDeleteEntries(siteId?: string): Promise<boolean> {
         const site = await CoreSites.getSite(siteId);
 
-        return site.wsAvailable('mod_glossary_delete_entry');
+        return site.wsAvailable('mod_thglossary_delete_entry');
     }
 
     /**
@@ -643,7 +643,7 @@ export class AddonModGlossaryProvider {
     async canUpdateEntries(siteId?: string): Promise<boolean> {
         const site = await CoreSites.getSite(siteId);
 
-        return site.wsAvailable('mod_glossary_update_entry');
+        return site.wsAvailable('mod_thglossary_update_entry');
     }
 
     /**
@@ -654,14 +654,14 @@ export class AddonModGlossaryProvider {
      * @returns Promise resolved with all entrries.
      */
     fetchAllEntries(
-        fetchFunction: (options?: AddonModGlossaryGetEntriesOptions) => Promise<AddonModGlossaryGetEntriesWSResponse>,
+        fetchFunction: (options?: AddonModThGlossaryGetEntriesOptions) => Promise<AddonModThGlossaryGetEntriesWSResponse>,
         options: CoreCourseCommonModWSOptions = {},
-    ): Promise<AddonModGlossaryEntry[]> {
+    ): Promise<AddonModThGlossaryEntry[]> {
         options.siteId = options.siteId || CoreSites.getCurrentSiteId();
 
-        const entries: AddonModGlossaryEntry[] = [];
+        const entries: AddonModThGlossaryEntry[] = [];
 
-        const fetchMoreEntries = async (): Promise<AddonModGlossaryEntry[]> => {
+        const fetchMoreEntries = async (): Promise<AddonModThGlossaryEntry[]> => {
             const result = await fetchFunction({
                 from: entries.length,
                 ...options, // Include all options.
@@ -693,7 +693,7 @@ export class AddonModGlossaryProvider {
      * @param entries Entry objects to invalidate.
      * @param siteId Site ID. If not defined, current site.
      */
-    protected async invalidateEntries(entries: AddonModGlossaryEntry[], siteId?: string): Promise<void> {
+    protected async invalidateEntries(entries: AddonModThGlossaryEntry[], siteId?: string): Promise<void> {
         const keys: string[] = [];
         entries.forEach((entry) => {
             keys.push(this.getEntryCacheKey(entry.id));
@@ -706,7 +706,7 @@ export class AddonModGlossaryProvider {
 
     /**
      * Invalidate the prefetched content except files.
-     * To invalidate files, use AddonModGlossary#invalidateFiles.
+     * To invalidate files, use AddonModThGlossary#invalidateFiles.
      *
      * @param moduleId The module ID.
      * @param courseId Course ID.
@@ -724,13 +724,13 @@ export class AddonModGlossaryProvider {
 
     /**
      * Invalidate the prefetched content for a given glossary, except files.
-     * To invalidate files, use AddonModGlossaryProvider#invalidateFiles.
+     * To invalidate files, use AddonModThGlossaryProvider#invalidateFiles.
      *
      * @param glossary The glossary object.
      * @param onlyEntriesList If true, entries won't be invalidated.
      * @param siteId Site ID. If not defined, current site.
      */
-    async invalidateGlossaryEntries(glossary: AddonModGlossaryGlossary, onlyEntriesList?: boolean, siteId?: string): Promise<void> {
+    async invalidateGlossaryEntries(glossary: AddonModThGlossaryGlossary, onlyEntriesList?: boolean, siteId?: string): Promise<void> {
         siteId = siteId || CoreSites.getCurrentSiteId();
 
         const promises: Promise<void>[] = [];
@@ -773,7 +773,7 @@ export class AddonModGlossaryProvider {
      * @param options Other options.
      * @returns Promise resolved with the glossary.
      */
-    async getGlossary(courseId: number, cmId: number, options: CoreSitesCommonWSOptions = {}): Promise<AddonModGlossaryGlossary> {
+    async getGlossary(courseId: number, cmId: number, options: CoreSitesCommonWSOptions = {}): Promise<AddonModThGlossaryGlossary> {
         const glossaries = await this.getCourseGlossaries(courseId, options);
 
         return CoreCourseModuleHelper.getActivityByCmId(glossaries, cmId);
@@ -783,24 +783,24 @@ export class AddonModGlossaryProvider {
      * Get one glossary by glossary ID.
      *
      * @param courseId Course Id.
-     * @param glossaryId Glossary Id.
+     * @param thglossaryid Glossary Id.
      * @param options Other options.
      * @returns Promise resolved with the glossary.
      */
     async getGlossaryById(
         courseId: number,
-        glossaryId: number,
+        thglossaryid: number,
         options: CoreSitesCommonWSOptions = {},
-    ): Promise<AddonModGlossaryGlossary> {
+    ): Promise<AddonModThGlossaryGlossary> {
         const glossaries = await this.getCourseGlossaries(courseId, options);
 
-        return CoreCourseModuleHelper.getActivityByField(glossaries, 'id', glossaryId);
+        return CoreCourseModuleHelper.getActivityByField(glossaries, 'id', thglossaryid);
     }
 
     /**
      * Create a new entry on a glossary
      *
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param concept Glossary entry concept.
      * @param definition Glossary entry concept definition.
      * @param courseId Course ID of the glossary.
@@ -810,13 +810,13 @@ export class AddonModGlossaryProvider {
      * @returns Promise resolved with entry ID if entry was created in server, false if stored in device.
      */
     async addEntry(
-        glossaryId: number,
+        thglossaryid: number,
         concept: string,
         definition: string,
         courseId: number,
-        entryOptions: Record<string, AddonModGlossaryEntryOption>,
+        entryOptions: Record<string, AddonModThGlossaryEntryOption>,
         attachments?: number | CoreFileUploaderStoreFilesResult,
-        otherOptions: AddonModGlossaryAddEntryOptions = {},
+        otherOptions: AddonModThGlossaryAddEntryOptions = {},
     ): Promise<number | false> {
         otherOptions.siteId = otherOptions.siteId || CoreSites.getCurrentSiteId();
 
@@ -824,13 +824,13 @@ export class AddonModGlossaryProvider {
         const storeOffline = async (): Promise<false> => {
             if (otherOptions.checkDuplicates) {
                 // Check if the entry is duplicated in online or offline mode.
-                const conceptUsed = await this.isConceptUsed(glossaryId, concept, {
+                const conceptUsed = await this.isConceptUsed(thglossaryid, concept, {
                     cmId: otherOptions.cmId,
                     siteId: otherOptions.siteId,
                 });
 
                 if (conceptUsed) {
-                    throw new CoreError(Translate.instant('addon.mod_glossary.errconceptalreadyexists'));
+                    throw new CoreError(Translate.instant('addon.mod_thglossary.errconceptalreadyexists'));
                 }
             }
 
@@ -839,8 +839,8 @@ export class AddonModGlossaryProvider {
                 throw new CoreError('Error adding entry.');
             }
 
-            await AddonModGlossaryOffline.addOfflineEntry(
-                glossaryId,
+            await AddonModThGlossaryOffline.addOfflineEntry(
+                thglossaryid,
                 concept,
                 definition,
                 courseId,
@@ -862,7 +862,7 @@ export class AddonModGlossaryProvider {
         try {
             // Try to add it in online.
             const entryId = await this.addEntryOnline(
-                glossaryId,
+                thglossaryid,
                 concept,
                 definition,
                 entryOptions,
@@ -885,7 +885,7 @@ export class AddonModGlossaryProvider {
     /**
      * Create a new entry on a glossary. It does not cache calls. It will fail if offline or cannot connect.
      *
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param concept Glossary entry concept.
      * @param definition Glossary entry concept definition.
      * @param options Options for the entry.
@@ -894,17 +894,17 @@ export class AddonModGlossaryProvider {
      * @returns Promise resolved with the entry ID if created, rejected otherwise.
      */
     async addEntryOnline(
-        glossaryId: number,
+        thglossaryid: number,
         concept: string,
         definition: string,
-        options?: Record<string, AddonModGlossaryEntryOption>,
+        options?: Record<string, AddonModThGlossaryEntryOption>,
         attachId?: number,
         siteId?: string,
     ): Promise<number> {
         const site = await CoreSites.getSite(siteId);
 
-        const params: AddonModGlossaryAddEntryWSParams = {
-            glossaryid: glossaryId,
+        const params: AddonModThGlossaryAddEntryWSParams = {
+            thglossaryid: thglossaryid,
             concept: concept,
             definition: definition,
             definitionformat: DEFAULT_TEXT_FORMAT,
@@ -918,9 +918,9 @@ export class AddonModGlossaryProvider {
             });
         }
 
-        const response = await site.write<AddonModGlossaryAddEntryWSResponse>('mod_glossary_add_entry', params);
+        const response = await site.write<AddonModThGlossaryAddEntryWSResponse>('mod_thglossary_add_entry', params);
 
-        CoreEvents.trigger(ADDON_MOD_GLOSSARY_ENTRY_ADDED, { glossaryId, entryId: response.entryid }, siteId);
+        CoreEvents.trigger(ADDON_MOD_TH_GLOSSARY_ENTRY_ADDED, { thglossaryid, entryId: response.entryid }, siteId);
 
         return response.entryid;
     }
@@ -928,7 +928,7 @@ export class AddonModGlossaryProvider {
     /**
      * Update an existing entry on a glossary.
      *
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param entryId Entry ID.
      * @param concept Glossary entry concept.
      * @param definition Glossary entry concept definition.
@@ -937,17 +937,17 @@ export class AddonModGlossaryProvider {
      * @param siteId Site ID. If not defined, current site.
      */
     async updateEntry(
-        glossaryId: number,
+        thglossaryid: number,
         entryId: number,
         concept: string,
         definition: string,
-        options?: Record<string, AddonModGlossaryEntryOption>,
+        options?: Record<string, AddonModThGlossaryEntryOption>,
         attachId?: number,
         siteId?: string,
     ): Promise<void> {
         const site = await CoreSites.getSite(siteId);
 
-        const params: AddonModGlossaryUpdateEntryWSParams = {
+        const params: AddonModThGlossaryUpdateEntryWSParams = {
             entryid: entryId,
             concept: concept,
             definition: definition,
@@ -962,41 +962,41 @@ export class AddonModGlossaryProvider {
             });
         }
 
-        const response = await site.write<AddonModGlossaryUpdateEntryWSResponse>('mod_glossary_update_entry', params);
+        const response = await site.write<AddonModThGlossaryUpdateEntryWSResponse>('mod_thglossary_update_entry', params);
 
         if (!response.result) {
             throw new CoreError(response.warnings?.[0].message ?? 'Error updating entry');
         }
 
-        CoreEvents.trigger(ADDON_MOD_GLOSSARY_ENTRY_UPDATED, { glossaryId, entryId }, siteId);
+        CoreEvents.trigger(ADDON_MOD_TH_GLOSSARY_ENTRY_UPDATED, { thglossaryid, entryId }, siteId);
     }
 
     /**
      * Delete entry.
      *
-     * @param glossaryId Glossary id.
+     * @param thglossaryid Glossary id.
      * @param entryId Entry id.
      */
-    async deleteEntry(glossaryId: number, entryId: number): Promise<void> {
+    async deleteEntry(thglossaryid: number, entryId: number): Promise<void> {
         const site = CoreSites.getRequiredCurrentSite();
 
-        await site.write('mod_glossary_delete_entry', { entryid: entryId });
+        await site.write('mod_thglossary_delete_entry', { entryid: entryId });
 
-        CoreEvents.trigger(ADDON_MOD_GLOSSARY_ENTRY_DELETED, { glossaryId, entryId });
+        CoreEvents.trigger(ADDON_MOD_TH_GLOSSARY_ENTRY_DELETED, { thglossaryid, entryId });
     }
 
     /**
      * Check if a entry concept is already used.
      *
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param concept Concept to check.
      * @param options Other options.
      * @returns Promise resolved with true if used, resolved with false if not used or error.
      */
-    async isConceptUsed(glossaryId: number, concept: string, options: AddonModGlossaryIsConceptUsedOptions = {}): Promise<boolean> {
+    async isConceptUsed(thglossaryid: number, concept: string, options: AddonModThGlossaryIsConceptUsedOptions = {}): Promise<boolean> {
         try {
             // Check offline first.
-            const exists = await AddonModGlossaryOffline.isConceptUsed(glossaryId, concept, options.timeCreated, options.siteId);
+            const exists = await AddonModThGlossaryOffline.isConceptUsed(thglossaryid, concept, options.timeCreated, options.siteId);
 
             if (exists) {
                 return true;
@@ -1004,7 +1004,7 @@ export class AddonModGlossaryProvider {
 
             // If we get here, there's no offline entry with this name, check online.
             // Get entries from the cache.
-            const entries = await this.fetchAllEntries((options) => this.getEntriesByLetter(glossaryId, options), {
+            const entries = await this.fetchAllEntries((options) => this.getEntriesByLetter(thglossaryid, options), {
                 cmId: options.cmId,
                 readingStrategy: CoreSitesReadingStrategy.PREFER_CACHE,
                 siteId: options.siteId,
@@ -1021,21 +1021,21 @@ export class AddonModGlossaryProvider {
     /**
      * Report a glossary as being viewed.
      *
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param mode The mode in which the glossary was viewed.
      * @param siteId Site ID. If not defined, current site.
      */
-    async logView(glossaryId: number, mode: string, siteId?: string): Promise<void> {
-        const params: AddonModGlossaryViewGlossaryWSParams = {
-            id: glossaryId,
+    async logView(thglossaryid: number, mode: string, siteId?: string): Promise<void> {
+        const params: AddonModThGlossaryViewGlossaryWSParams = {
+            id: thglossaryid,
             mode: mode,
         };
 
         await CoreCourseLogHelper.log(
-            'mod_glossary_view_glossary',
+            'mod_thglossary_view_thglossary',
             params,
-            ADDON_MOD_GLOSSARY_COMPONENT_LEGACY,
-            glossaryId,
+            ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY,
+            thglossaryid,
             siteId,
         );
     }
@@ -1044,54 +1044,54 @@ export class AddonModGlossaryProvider {
      * Report a glossary entry as being viewed.
      *
      * @param entryId Entry ID.
-     * @param glossaryId Glossary ID.
+     * @param thglossaryid Glossary ID.
      * @param siteId Site ID. If not defined, current site.
      */
-    async logEntryView(entryId: number, glossaryId: number, siteId?: string): Promise<void> {
-        const params: AddonModGlossaryViewEntryWSParams = {
+    async logEntryView(entryId: number, thglossaryid: number, siteId?: string): Promise<void> {
+        const params: AddonModThGlossaryViewEntryWSParams = {
             id: entryId,
         };
 
         await CoreCourseLogHelper.log(
-            'mod_glossary_view_entry',
+            'mod_thglossary_view_entry',
             params,
-            ADDON_MOD_GLOSSARY_COMPONENT_LEGACY,
-            glossaryId,
+            ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY,
+            thglossaryid,
             siteId,
         );
     }
 
     /**
-     * Store several entries so we can determine their glossaryId in offline.
+     * Store several entries so we can determine their thglossaryid in offline.
      *
-     * @param glossaryId Glossary ID the entries belongs to.
+     * @param thglossaryid Glossary ID the entries belongs to.
      * @param entries Entries.
      * @param from The "page" the entries belong to.
      * @param siteId Site ID. If not defined, current site.
      */
     protected async storeEntries(
-        glossaryId: number,
-        entries: AddonModGlossaryEntry[],
+        thglossaryid: number,
+        entries: AddonModThGlossaryEntry[],
         from: number,
         siteId?: string,
     ): Promise<void> {
-        await Promise.all(entries.map((entry) => this.storeEntryId(glossaryId, entry.id, from, siteId)));
+        await Promise.all(entries.map((entry) => this.storeEntryId(thglossaryid, entry.id, from, siteId)));
     }
 
     /**
-     * Store an entry so we can determine its glossaryId in offline.
+     * Store an entry so we can determine its thglossaryid in offline.
      *
-     * @param glossaryId Glossary ID the entry belongs to.
+     * @param thglossaryid Glossary ID the entry belongs to.
      * @param entryId Entry ID.
      * @param from The "page" the entry belongs to.
      * @param siteId Site ID. If not defined, current site.
      */
-    protected async storeEntryId(glossaryId: number, entryId: number, from: number, siteId?: string): Promise<void> {
+    protected async storeEntryId(thglossaryid: number, entryId: number, from: number, siteId?: string): Promise<void> {
         const site = await CoreSites.getSite(siteId);
 
-        const entry: AddonModGlossaryEntryDBRecord = {
+        const entry: AddonModThGlossaryEntryDBRecord = {
             entryid: entryId,
-            glossaryid: glossaryId,
+            thglossaryid: thglossaryid,
             pagefrom: from,
         };
 
@@ -1108,19 +1108,19 @@ export class AddonModGlossaryProvider {
     async prepareEntryForEdition(
         entryId: number,
         siteId?: string,
-    ): Promise<AddonModGlossaryPrepareEntryForEditionWSResponse> {
+    ): Promise<AddonModThGlossaryPrepareEntryForEditionWSResponse> {
         const site = await CoreSites.getSite(siteId);
 
-        const params: AddonModGlossaryPrepareEntryForEditionWSParams = {
+        const params: AddonModThGlossaryPrepareEntryForEditionWSParams = {
             entryid: entryId,
         };
 
-        return await site.write('mod_glossary_prepare_entry_for_edition', params);
+        return await site.write('mod_thglossary_prepare_entry_for_edition', params);
     }
 
 }
 
-export const AddonModGlossary = makeSingleton(AddonModGlossaryProvider);
+export const AddonModThGlossary = makeSingleton(AddonModThGlossaryProvider);
 
 declare module '@singletons/events' {
 
@@ -1130,59 +1130,59 @@ declare module '@singletons/events' {
      * @see https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation
      */
     export interface CoreEventsData {
-        [ADDON_MOD_GLOSSARY_ENTRY_ADDED]: AddonModGlossaryEntryAddedEventData;
-        [ADDON_MOD_GLOSSARY_ENTRY_UPDATED]: AddonModGlossaryEntryUpdatedEventData;
-        [ADDON_MOD_GLOSSARY_ENTRY_DELETED]: AddonModGlossaryEntryDeletedEventData;
+        [ADDON_MOD_TH_GLOSSARY_ENTRY_ADDED]: AddonModThGlossaryEntryAddedEventData;
+        [ADDON_MOD_TH_GLOSSARY_ENTRY_UPDATED]: AddonModThGlossaryEntryUpdatedEventData;
+        [ADDON_MOD_TH_GLOSSARY_ENTRY_DELETED]: AddonModThGlossaryEntryDeletedEventData;
     }
 
 }
 
 /**
- * ADDON_MOD_GLOSSARY_ENTRY_ADDED event payload.
+ * ADDON_MOD_TH_GLOSSARY_ENTRY_ADDED event payload.
  */
-export type AddonModGlossaryEntryAddedEventData = {
-    glossaryId: number;
+export type AddonModThGlossaryEntryAddedEventData = {
+    thglossaryid: number;
     entryId?: number;
     timecreated?: number;
 };
 
 /**
- * ADDON_MOD_GLOSSARY_ENTRY_UPDATED event payload.
+ * ADDON_MOD_TH_GLOSSARY_ENTRY_UPDATED event payload.
  */
-export type AddonModGlossaryEntryUpdatedEventData = {
-    glossaryId: number;
+export type AddonModThGlossaryEntryUpdatedEventData = {
+    thglossaryid: number;
     entryId?: number;
     timecreated?: number;
 };
 
 /**
- * ADDON_MOD_GLOSSARY_ENTRY_DELETED event payload.
+ * ADDON_MOD_TH_GLOSSARY_ENTRY_DELETED event payload.
  */
-export type AddonModGlossaryEntryDeletedEventData = {
-    glossaryId: number;
+export type AddonModThGlossaryEntryDeletedEventData = {
+    thglossaryid: number;
     entryId?: number;
     timecreated?: number;
 };
 
 /**
- * Params of mod_glossary_get_glossaries_by_courses WS.
+ * Params of mod_thglossary_get_glossaries_by_courses WS.
  */
-export type AddonModGlossaryGetGlossariesByCoursesWSParams = {
+export type AddonModThGlossaryGetGlossariesByCoursesWSParams = {
     courseids?: number[]; // Array of course IDs.
 };
 
 /**
- * Data returned by mod_glossary_get_glossaries_by_courses WS.
+ * Data returned by mod_thglossary_get_glossaries_by_courses WS.
  */
-export type AddonModGlossaryGetGlossariesByCoursesWSResponse = {
-    glossaries: AddonModGlossaryGlossary[];
+export type AddonModThGlossaryGetGlossariesByCoursesWSResponse = {
+    glossaries: AddonModThGlossaryGlossary[];
     warnings?: CoreWSExternalWarning[];
 };
 
 /**
- * Data returned by mod_glossary_get_glossaries_by_courses WS.
+ * Data returned by mod_thglossary_get_glossaries_by_courses WS.
  */
-export type AddonModGlossaryGlossary = CoreCourseModuleStandardElements & {
+export type AddonModThGlossaryGlossary = CoreCourseModuleStandardElements & {
     allowduplicatedentries: number; // If enabled, multiple entries can have the same concept name.
     displayformat: string; // Display format type.
     mainglossary: number; // If enabled this glossary is a main glossary.
@@ -1213,7 +1213,7 @@ export type AddonModGlossaryGlossary = CoreCourseModuleStandardElements & {
 /**
  * Common data passed to the get entries WebServices.
  */
-export type AddonModGlossaryCommonGetEntriesWSParams = {
+export type AddonModThGlossaryCommonGetEntriesWSParams = {
     id: number; // Glossary entry ID.
     from?: number; // Start returning records from here.
     limit?: number; // Number of records to return.
@@ -1227,55 +1227,55 @@ export type AddonModGlossaryCommonGetEntriesWSParams = {
 /**
  * Data returned by the different get entries WebServices.
  */
-export type AddonModGlossaryGetEntriesWSResponse = {
+export type AddonModThGlossaryGetEntriesWSResponse = {
     count: number; // The total number of records matching the request.
-    entries: AddonModGlossaryEntry[];
+    entries: AddonModThGlossaryEntry[];
     ratinginfo?: CoreRatingInfo; // Rating information.
     warnings?: CoreWSExternalWarning[];
 };
 
 /**
- * Params of mod_glossary_get_entries_by_author WS.
+ * Params of mod_thglossary_get_entries_by_author WS.
  */
-export type AddonModGlossaryGetEntriesByAuthorWSParams = AddonModGlossaryCommonGetEntriesWSParams & {
+export type AddonModThGlossaryGetEntriesByAuthorWSParams = AddonModThGlossaryCommonGetEntriesWSParams & {
     letter: string; // First letter of firstname or lastname, or either keywords: 'ALL' or 'SPECIAL'.
     field?: string; // Search and order using: 'FIRSTNAME' or 'LASTNAME'.
     sort?: string; // The direction of the order: 'ASC' or 'DESC'.
 };
 
 /**
- * Params of mod_glossary_get_entries_by_category WS.
+ * Params of mod_thglossary_get_entries_by_category WS.
  */
-export type AddonModGlossaryGetEntriesByCategoryWSParams = AddonModGlossaryCommonGetEntriesWSParams & {
+export type AddonModThGlossaryGetEntriesByCategoryWSParams = AddonModThGlossaryCommonGetEntriesWSParams & {
     categoryid: number; // The category ID. Use '0' for all categories, or '-1' for uncategorised entries.
 };
 
 /**
- * Data returned by mod_glossary_get_entries_by_category WS.
+ * Data returned by mod_thglossary_get_entries_by_category WS.
  */
-export type AddonModGlossaryGetEntriesByCategoryWSResponse = Omit<AddonModGlossaryGetEntriesWSResponse, 'entries'> & {
-    entries: AddonModGlossaryEntryWithCategory[];
+export type AddonModThGlossaryGetEntriesByCategoryWSResponse = Omit<AddonModThGlossaryGetEntriesWSResponse, 'entries'> & {
+    entries: AddonModThGlossaryEntryWithCategory[];
 };
 
 /**
- * Params of mod_glossary_get_entries_by_date WS.
+ * Params of mod_thglossary_get_entries_by_date WS.
  */
-export type AddonModGlossaryGetEntriesByDateWSParams = AddonModGlossaryCommonGetEntriesWSParams & {
+export type AddonModThGlossaryGetEntriesByDateWSParams = AddonModThGlossaryCommonGetEntriesWSParams & {
     order?: string; // Order the records by: 'CREATION' or 'UPDATE'.
     sort?: string; // The direction of the order: 'ASC' or 'DESC'.
 };
 
 /**
- * Params of mod_glossary_get_entries_by_letter WS.
+ * Params of mod_thglossary_get_entries_by_letter WS.
  */
-export type AddonModGlossaryGetEntriesByLetterWSParams = AddonModGlossaryCommonGetEntriesWSParams & {
+export type AddonModThGlossaryGetEntriesByLetterWSParams = AddonModThGlossaryCommonGetEntriesWSParams & {
     letter: string; // A letter, or either keywords: 'ALL' or 'SPECIAL'.
 };
 
 /**
- * Params of mod_glossary_get_entries_by_search WS.
+ * Params of mod_thglossary_get_entries_by_search WS.
  */
-export type AddonModGlossaryGetEntriesBySearchWSParams = AddonModGlossaryCommonGetEntriesWSParams & {
+export type AddonModThGlossaryGetEntriesBySearchWSParams = AddonModThGlossaryCommonGetEntriesWSParams & {
     query: string; // The query string.
     fullsearch?: boolean; // The query.
     order?: string; // Order by: 'CONCEPT', 'CREATION' or 'UPDATE'.
@@ -1285,9 +1285,9 @@ export type AddonModGlossaryGetEntriesBySearchWSParams = AddonModGlossaryCommonG
 /**
  * Entry data returned by several WS.
  */
-export type AddonModGlossaryEntry = {
+export type AddonModThGlossaryEntry = {
     id: number; // The entry ID.
-    glossaryid: number; // The glossary ID.
+    thglossaryid: number; // The glossary ID.
     userid: number; // Author ID.
     userfullname: string; // Author full name.
     userpictureurl: string; // Author picture.
@@ -1301,7 +1301,7 @@ export type AddonModGlossaryEntry = {
     timecreated: number; // Time created.
     timemodified: number; // Time modified.
     teacherentry: boolean; // The entry was created by a teacher, or equivalent.
-    sourceglossaryid: number; // The source glossary ID.
+    sourcethglossaryid: number; // The source glossary ID.
     usedynalink: boolean; // Whether the concept should be automatically linked.
     casesensitive: boolean; // When true, the matching is case sensitive.
     fullmatch: boolean; // When true, the matching is done on full words only.
@@ -1312,51 +1312,51 @@ export type AddonModGlossaryEntry = {
 /**
  * Entry data returned by several WS.
  */
-export type AddonModGlossaryEntryWithCategory = AddonModGlossaryEntry & {
+export type AddonModThGlossaryEntryWithCategory = AddonModThGlossaryEntry & {
     categoryid?: number; // The category ID. This may be '-1' when the entry is not categorised.
     categoryname?: string; // The category name. May be empty when the entry is not categorised.
 };
 
 /**
- * Params of mod_glossary_get_categories WS.
+ * Params of mod_thglossary_get_categories WS.
  */
-export type AddonModGlossaryGetCategoriesWSParams = {
+export type AddonModThGlossaryGetCategoriesWSParams = {
     id: number; // The glossary ID.
     from?: number; // Start returning records from here.
     limit?: number; // Number of records to return.
 };
 
 /**
- * Data returned by mod_glossary_get_categories WS.
+ * Data returned by mod_thglossary_get_categories WS.
  */
-export type AddonModGlossaryGetCategoriesWSResponse = {
+export type AddonModThGlossaryGetCategoriesWSResponse = {
     count: number; // The total number of records.
-    categories: AddonModGlossaryCategory[];
+    categories: AddonModThGlossaryCategory[];
     warnings?: CoreWSExternalWarning[];
 };
 
 /**
- * Data returned by mod_glossary_get_categories WS.
+ * Data returned by mod_thglossary_get_categories WS.
  */
-export type AddonModGlossaryCategory = {
+export type AddonModThGlossaryCategory = {
     id: number; // The category ID.
-    glossaryid: number; // The glossary ID.
+    thglossaryid: number; // The glossary ID.
     name: string; // The name of the category.
     usedynalink: boolean; // Whether the category is automatically linked.
 };
 
 /**
- * Params of mod_glossary_get_entry_by_id WS.
+ * Params of mod_thglossary_get_entry_by_id WS.
  */
-export type AddonModGlossaryGetEntryByIdWSParams = {
+export type AddonModThGlossaryGetEntryByIdWSParams = {
     id: number; // Glossary entry ID.
 };
 
 /**
- * Data returned by mod_glossary_get_entry_by_id WS.
+ * Data returned by mod_thglossary_get_entry_by_id WS.
  */
-export type AddonModGlossaryGetEntryByIdWSResponse = {
-    entry: AddonModGlossaryEntry;
+export type AddonModThGlossaryGetEntryByIdWSResponse = {
+    entry: AddonModThGlossaryEntry;
     ratinginfo?: CoreRatingInfo; // Rating information.
     permissions?: {
         candelete: boolean; // Whether the user can delete the entry.
@@ -1366,17 +1366,17 @@ export type AddonModGlossaryGetEntryByIdWSResponse = {
 };
 
 /**
- * Data returned by mod_glossary_get_entry_by_id WS, with some calculated data if needed.
+ * Data returned by mod_thglossary_get_entry_by_id WS, with some calculated data if needed.
  */
-export type AddonModGlossaryGetEntryByIdResponse = AddonModGlossaryGetEntryByIdWSResponse & {
+export type AddonModThGlossaryGetEntryByIdResponse = AddonModThGlossaryGetEntryByIdWSResponse & {
     from?: number;
 };
 
 /**
- * Params of mod_glossary_add_entry WS.
+ * Params of mod_thglossary_add_entry WS.
  */
-export type AddonModGlossaryAddEntryWSParams = {
-    glossaryid: number; // Glossary id.
+export type AddonModThGlossaryAddEntryWSParams = {
+    thglossaryid: number; // Glossary id.
     concept: string; // Glossary concept.
     definition: string; // Glossary concept definition.
     definitionformat: CoreTextFormat; // Definition format (1 = HTML, 0 = MOODLE, 2 = PLAIN or 4 = MARKDOWN).
@@ -1394,17 +1394,17 @@ export type AddonModGlossaryAddEntryWSParams = {
 };
 
 /**
- * Data returned by mod_glossary_add_entry WS.
+ * Data returned by mod_thglossary_add_entry WS.
  */
-export type AddonModGlossaryAddEntryWSResponse = {
+export type AddonModThGlossaryAddEntryWSResponse = {
     entryid: number; // New glossary entry ID.
     warnings?: CoreWSExternalWarning[];
 };
 
 /**
- * Params of mod_glossary_update_entry WS.
+ * Params of mod_thglossary_update_entry WS.
  */
-export type AddonModGlossaryUpdateEntryWSParams = {
+export type AddonModThGlossaryUpdateEntryWSParams = {
     entryid: number; // Glossary entry id to update.
     concept: string; // Glossary concept.
     definition: string; // Glossary concept definition.
@@ -1423,39 +1423,39 @@ export type AddonModGlossaryUpdateEntryWSParams = {
 };
 
 /**
- * Data returned by mod_glossary_update_entry WS.
+ * Data returned by mod_thglossary_update_entry WS.
  */
-export type AddonModGlossaryUpdateEntryWSResponse = {
+export type AddonModThGlossaryUpdateEntryWSResponse = {
     result: boolean; // The update result.
     warnings?: CoreWSExternalWarning[];
 };
 
 /**
- * Params of mod_glossary_view_glossary WS.
+ * Params of mod_thglossary_view_thglossary WS.
  */
-export type AddonModGlossaryViewGlossaryWSParams = {
+export type AddonModThGlossaryViewGlossaryWSParams = {
     id: number; // Glossary instance ID.
     mode: string; // The mode in which the glossary is viewed.
 };
 
 /**
- * Params of mod_glossary_view_entry WS.
+ * Params of mod_thglossary_view_entry WS.
  */
-export type AddonModGlossaryViewEntryWSParams = {
+export type AddonModThGlossaryViewEntryWSParams = {
     id: number; // Glossary entry ID.
 };
 
 /**
- * Params of mod_glossary_prepare_entry_for_edition WS.
+ * Params of mod_thglossary_prepare_entry_for_edition WS.
  */
-type AddonModGlossaryPrepareEntryForEditionWSParams = {
+type AddonModThGlossaryPrepareEntryForEditionWSParams = {
     entryid: number; // Glossary entry id to update.
 };
 
 /**
- * Data returned by mod_glossary_prepare_entry_for_edition WS.
+ * Data returned by mod_thglossary_prepare_entry_for_edition WS.
  */
-export type AddonModGlossaryPrepareEntryForEditionWSResponse = {
+export type AddonModThGlossaryPrepareEntryForEditionWSResponse = {
     inlineattachmentsid: number; // Draft item id for the text editor.
     attachmentsid: number; // Draft item id for the file manager.
     areas: { // File areas including options.
@@ -1473,7 +1473,7 @@ export type AddonModGlossaryPrepareEntryForEditionWSResponse = {
 /**
  * Options to pass to add entry.
  */
-export type AddonModGlossaryAddEntryOptions = {
+export type AddonModThGlossaryAddEntryOptions = {
     timeCreated?: number; // The time the entry was created. If not defined, current time.
     allowOffline?: boolean; // True if it can be stored in offline, false otherwise.
     checkDuplicates?: boolean; // Check for duplicates before storing offline. Only used if allowOffline is true.
@@ -1484,23 +1484,23 @@ export type AddonModGlossaryAddEntryOptions = {
 /**
  * Options to pass to the different get entries functions.
  */
-export type AddonModGlossaryGetEntriesOptions = CoreCourseCommonModWSOptions & {
+export type AddonModThGlossaryGetEntriesOptions = CoreCourseCommonModWSOptions & {
     from?: number; // Start returning records from here. Defaults to 0.
-    limit?: number; // Number of records to return. Defaults to ADDON_MOD_GLOSSARY_LIMIT_ENTRIES.
+    limit?: number; // Number of records to return. Defaults to ADDON_MOD_TH_GLOSSARY_LIMIT_ENTRIES.
 };
 
 /**
  * Options to pass to get categories.
  */
-export type AddonModGlossaryGetCategoriesOptions = CoreCourseCommonModWSOptions & {
+export type AddonModThGlossaryGetCategoriesOptions = CoreCourseCommonModWSOptions & {
     from?: number; // Start returning records from here. Defaults to 0.
-    limit?: number; // Number of records to return. Defaults to ADDON_MOD_GLOSSARY_LIMIT_CATEGORIES.
+    limit?: number; // Number of records to return. Defaults to ADDON_MOD_TH_GLOSSARY_LIMIT_CATEGORIES.
 };
 
 /**
  * Options to pass to is concept used.
  */
-export type AddonModGlossaryIsConceptUsedOptions = {
+export type AddonModThGlossaryIsConceptUsedOptions = {
     cmId?: number; // Module ID.
     timeCreated?: number; // Timecreated to check that is not the timecreated we are editing.
     siteId?: string; // Site ID. If not defined, current site.
@@ -1509,11 +1509,11 @@ export type AddonModGlossaryIsConceptUsedOptions = {
 /**
  * Possible values for entry options.
  */
-export type AddonModGlossaryEntryOption = string | number;
+export type AddonModThGlossaryEntryOption = string | number;
 
 /**
  * Options for getEntry.
  */
-export type AddonModGlossaryGetEntryOptions = CoreCourseCommonModWSOptions & {
+export type AddonModThGlossaryGetEntryOptions = CoreCourseCommonModWSOptions & {
     filter?: boolean; // Defaults to true. If false, text won't be filtered and URLs won't be rewritten.
 };

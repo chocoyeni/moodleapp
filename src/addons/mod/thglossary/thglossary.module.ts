@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { conditionalRoutes } from '@/app/app-routing.module';
-import { NgModule, provideAppInitializer } from '@angular/core';
+import { APP_INITIALIZER, NgModule } from '@angular/core';
 import { Route, Routes } from '@angular/router';
 import { CoreContentLinksDelegate } from '@features/contentlinks/services/contentlinks-delegate';
 import { CORE_COURSE_CONTENTS_PATH } from '@features/course/constants';
@@ -26,16 +26,16 @@ import { CoreTagAreaDelegate } from '@features/tag/services/tag-area-delegate';
 import { CoreCronDelegate } from '@services/cron';
 import { CoreScreen } from '@services/screen';
 import { CORE_SITE_SCHEMAS } from '@services/sites';
-import { SITE_SCHEMA, OFFLINE_SITE_SCHEMA } from './services/database/glossary';
-import { AddonModGlossaryEditLinkHandler } from './services/handlers/edit-link';
-import { AddonModGlossaryEntryLinkHandler } from './services/handlers/entry-link';
-import { AddonModGlossaryIndexLinkHandler } from './services/handlers/index-link';
-import { AddonModGlossaryListLinkHandler } from './services/handlers/list-link';
-import { AddonModGlossaryModuleHandler } from './services/handlers/module';
-import { AddonModGlossaryPrefetchHandler } from './services/handlers/prefetch';
-import { AddonModGlossarySyncCronHandler } from './services/handlers/sync-cron';
-import { AddonModGlossaryTagAreaHandler } from './services/handlers/tag-area';
-import { ADDON_MOD_GLOSSARY_COMPONENT_LEGACY, ADDON_MOD_GLOSSARY_PAGE_NAME } from './constants';
+import { SITE_SCHEMA, OFFLINE_SITE_SCHEMA } from './services/database/thglossary';
+import { AddonModThGlossaryEditLinkHandler } from './services/handlers/edit-link';
+import { AddonModThGlossaryEntryLinkHandler } from './services/handlers/entry-link';
+import { AddonModThGlossaryIndexLinkHandler } from './services/handlers/index-link';
+import { AddonModThGlossaryListLinkHandler } from './services/handlers/list-link';
+import { AddonModThGlossaryModuleHandler } from './services/handlers/module';
+import { AddonModThGlossaryPrefetchHandler } from './services/handlers/prefetch';
+import { AddonModThGlossarySyncCronHandler } from './services/handlers/sync-cron';
+import { AddonModThGlossaryTagAreaHandler } from './services/handlers/tag-area';
+import { ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY, ADDON_MOD_TH_GLOSSARY_PAGE_NAME } from './constants';
 import { canLeaveGuard } from '@guards/can-leave';
 
 const mobileRoutes: Routes = [
@@ -70,13 +70,13 @@ const editRoute: Route = {
 const mainMenuRoutes: Routes = [
     // Link handlers navigation.
     {
-        path: `${ADDON_MOD_GLOSSARY_PAGE_NAME}/entry/:entrySlug`,
+        path: `${ADDON_MOD_TH_GLOSSARY_PAGE_NAME}/entry/:entrySlug`,
         loadComponent: () => import('./pages/entry/entry'),
     },
 
     // Course activity navigation.
     {
-        path: ADDON_MOD_GLOSSARY_PAGE_NAME,
+        path: ADDON_MOD_TH_GLOSSARY_PAGE_NAME,
         loadChildren: () => [
             {
                 path: ':courseId/:cmId/entry/new',
@@ -93,20 +93,20 @@ const mainMenuRoutes: Routes = [
 
     // Single Activity format navigation.
     {
-        path: `${CORE_COURSE_CONTENTS_PATH}/${ADDON_MOD_GLOSSARY_PAGE_NAME}/entry/new`,
-        data: { glossaryPathPrefix: `${ADDON_MOD_GLOSSARY_PAGE_NAME}/` },
+        path: `${CORE_COURSE_CONTENTS_PATH}/${ADDON_MOD_TH_GLOSSARY_PAGE_NAME}/entry/new`,
+        data: { glossaryPathPrefix: `${ADDON_MOD_TH_GLOSSARY_PAGE_NAME}/` },
         ...editRoute,
     },
     {
-        path: `${CORE_COURSE_CONTENTS_PATH}/${ADDON_MOD_GLOSSARY_PAGE_NAME}/entry/:entrySlug/edit`,
-        data: { glossaryPathPrefix: `${ADDON_MOD_GLOSSARY_PAGE_NAME}/` },
+        path: `${CORE_COURSE_CONTENTS_PATH}/${ADDON_MOD_TH_GLOSSARY_PAGE_NAME}/entry/:entrySlug/edit`,
+        data: { glossaryPathPrefix: `${ADDON_MOD_TH_GLOSSARY_PAGE_NAME}/` },
         ...editRoute,
     },
     ...conditionalRoutes(
         [{
-            path: `${CORE_COURSE_CONTENTS_PATH}/${ADDON_MOD_GLOSSARY_PAGE_NAME}/entry/:entrySlug`,
+            path: `${CORE_COURSE_CONTENTS_PATH}/${ADDON_MOD_TH_GLOSSARY_PAGE_NAME}/entry/:entrySlug`,
             loadComponent: () => import('./pages/entry/entry'),
-            data: { glossaryPathPrefix: `${ADDON_MOD_GLOSSARY_PAGE_NAME}/` },
+            data: { glossaryPathPrefix: `${ADDON_MOD_TH_GLOSSARY_PAGE_NAME}/` },
         }],
         () => CoreScreen.isMobile,
     ),
@@ -115,9 +115,9 @@ const mainMenuRoutes: Routes = [
 // Single Activity format navigation.
 const courseContentsRoutes: Routes = conditionalRoutes(
     [{
-        path: `${ADDON_MOD_GLOSSARY_PAGE_NAME}/entry/:entrySlug`,
+        path: `${ADDON_MOD_TH_GLOSSARY_PAGE_NAME}/entry/:entrySlug`,
         loadComponent: () => import('./pages/entry/entry'),
-        data: { glossaryPathPrefix: `${ADDON_MOD_GLOSSARY_PAGE_NAME}/` },
+        data: { glossaryPathPrefix: `${ADDON_MOD_TH_GLOSSARY_PAGE_NAME}/` },
     }],
     () => CoreScreen.isTablet,
 );
@@ -133,18 +133,22 @@ const courseContentsRoutes: Routes = conditionalRoutes(
             useValue: [SITE_SCHEMA, OFFLINE_SITE_SCHEMA],
             multi: true,
         },
-        provideAppInitializer(() => {
-            CoreCourseModuleDelegate.registerHandler(AddonModGlossaryModuleHandler.instance);
-            CoreCourseModulePrefetchDelegate.registerHandler(AddonModGlossaryPrefetchHandler.instance);
-            CoreCronDelegate.register(AddonModGlossarySyncCronHandler.instance);
-            CoreContentLinksDelegate.registerHandler(AddonModGlossaryIndexLinkHandler.instance);
-            CoreContentLinksDelegate.registerHandler(AddonModGlossaryListLinkHandler.instance);
-            CoreContentLinksDelegate.registerHandler(AddonModGlossaryEditLinkHandler.instance);
-            CoreContentLinksDelegate.registerHandler(AddonModGlossaryEntryLinkHandler.instance);
-            CoreTagAreaDelegate.registerHandler(AddonModGlossaryTagAreaHandler.instance);
+        {
+            provide: APP_INITIALIZER,
+            multi: true,
+            useValue: () => {
+                CoreCourseModuleDelegate.registerHandler(AddonModThGlossaryModuleHandler.instance);
+                CoreCourseModulePrefetchDelegate.registerHandler(AddonModThGlossaryPrefetchHandler.instance);
+                CoreCronDelegate.register(AddonModThGlossarySyncCronHandler.instance);
+                CoreContentLinksDelegate.registerHandler(AddonModThGlossaryIndexLinkHandler.instance);
+                CoreContentLinksDelegate.registerHandler(AddonModThGlossaryListLinkHandler.instance);
+                CoreContentLinksDelegate.registerHandler(AddonModThGlossaryEditLinkHandler.instance);
+                CoreContentLinksDelegate.registerHandler(AddonModThGlossaryEntryLinkHandler.instance);
+                CoreTagAreaDelegate.registerHandler(AddonModThGlossaryTagAreaHandler.instance);
 
-            CoreCourseHelper.registerModuleReminderClick(ADDON_MOD_GLOSSARY_COMPONENT_LEGACY);
-        }),
+                CoreCourseHelper.registerModuleReminderClick(ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY);
+            },
+        },
     ],
 })
-export class AddonModGlossaryModule {}
+export class AddonModThGlossaryModule {}

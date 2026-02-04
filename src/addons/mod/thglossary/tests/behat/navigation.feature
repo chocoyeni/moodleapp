@@ -1,4 +1,4 @@
-@addon_mod_glossary @app @mod @mod_glossary @javascript
+@addon_mod_thglossary @app @mod @mod_thglossary @javascript
 Feature: Test glossary navigation
 
   Background:
@@ -15,7 +15,7 @@ Feature: Test glossary navigation
     And the following "activities" exist:
       | activity | name            | course | idnumber | displayformat |
       | glossary | Fruits glossary | C1     | glossary | entrylist     |
-    And the following "mod_glossary > entries" exist:
+    And the following "mod_thglossary > entries" exist:
       | glossary | concept | definition | user |
       | glossary | Acerola | Acerola is a fruit | student1 |
       | glossary | Apple | Apple is a fruit | student2 |

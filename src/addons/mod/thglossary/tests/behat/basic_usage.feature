@@ -1,4 +1,4 @@
-@addon_mod_glossary @app @mod @mod_glossary @javascript
+@addon_mod_thglossary @app @mod @mod_thglossary @javascript
 Feature: Test basic usage of glossary in app
   In order to participate in the glossaries while using the mobile app
   As a student
@@ -24,11 +24,11 @@ Feature: Test basic usage of glossary in app
     And the following "activities" exist:
       | activity   | name            | intro       | course | idnumber | groupmode |
       | forum      | Test forum name | Test forum  | C1     | forum    | 0         |
-    And the following "mod_glossary > categories" exist:
+    And the following "mod_thglossary > categories" exist:
       | glossary | name            |
       | gloss1   | The ones I like |
       | gloss1   | All for you     |
-    And the following "mod_glossary > entries" exist:
+    And the following "mod_thglossary > entries" exist:
       | glossary | concept  | definition     | user     | categories      | usedynalink |
       | gloss1   | Eggplant | Sour eggplants | teacher1 | All for you     | 0           |
       | gloss1   | Cucumber | Sweet cucumber | student1 | The ones I like | 0           |
@@ -47,8 +47,8 @@ Feature: Test basic usage of glossary in app
     And I should find "To make chips" in the app
     And the following events should have been logged for "student1" in the app:
       | name                                     | activity | activityname  | object           | objectname | course   |
-      | \mod_glossary\event\course_module_viewed | glossary | Test glossary |                  |            | Course 1 |
-      | \mod_glossary\event\entry_viewed         | glossary | Test glossary | glossary_entries | Potato     | Course 1 |
+      | \mod_thglossary\event\course_module_viewed | glossary | Test glossary |                  |            | Course 1 |
+      | \mod_thglossary\event\entry_viewed         | glossary | Test glossary | glossary_entries | Potato     | Course 1 |
 
   Scenario: Navigate to glossary terms by link (auto-linking)
     Given the "glossary" filter is "on"

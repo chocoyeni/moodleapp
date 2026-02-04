@@ -19,8 +19,8 @@ import { CoreCourse } from '@features/course/services/course';
 import { CoreNavigator } from '@services/navigator';
 import { CoreSitesReadingStrategy } from '@services/sites';
 import { makeSingleton, Translate } from '@singletons';
-import { AddonModGlossary } from '../glossary';
-import { ADDON_MOD_GLOSSARY_FEATURE_NAME, ADDON_MOD_GLOSSARY_MODNAME, ADDON_MOD_GLOSSARY_PAGE_NAME } from '../../constants';
+import { AddonModThGlossary } from '../thglossary';
+import { ADDON_MOD_TH_GLOSSARY_FEATURE_NAME, ADDON_MOD_TH_GLOSSARY_MODNAME, ADDON_MOD_TH_GLOSSARY_PAGE_NAME } from '../../constants';
 import { CoreLoadings } from '@services/overlays/loadings';
 import { CoreAlerts } from '@services/overlays/alerts';
 
@@ -28,11 +28,11 @@ import { CoreAlerts } from '@services/overlays/alerts';
  * Handler to treat links to glossary entries.
  */
 @Injectable({ providedIn: 'root' })
-export class AddonModGlossaryEntryLinkHandlerService extends CoreContentLinksHandlerBase {
+export class AddonModThGlossaryEntryLinkHandlerService extends CoreContentLinksHandlerBase {
 
-    name = 'AddonModGlossaryEntryLinkHandler';
-    featureName = ADDON_MOD_GLOSSARY_FEATURE_NAME;
-    pattern = /\/mod\/glossary\/(showentry|view)\.php.*([&?](eid|g|mode|hook)=\d+)/;
+    name = 'AddonModThGlossaryEntryLinkHandler';
+    featureName = ADDON_MOD_TH_GLOSSARY_FEATURE_NAME;
+    pattern = /\/mod\/thglossary\/(showentry|view)\.php.*([&?](eid|g|mode|hook)=\d+)/;
 
     /**
      * @inheritdoc
@@ -45,19 +45,19 @@ export class AddonModGlossaryEntryLinkHandlerService extends CoreContentLinksHan
                 try {
                     const entryId = params.mode == 'entry' ? Number(params.hook) : Number(params.eid);
 
-                    const response = await AddonModGlossary.getEntry(
+                    const response = await AddonModThGlossary.getEntry(
                         entryId,
                         { siteId, readingStrategy: CoreSitesReadingStrategy.PREFER_CACHE },
                     );
 
                     const module = await CoreCourse.getModuleBasicInfoByInstance(
-                        response.entry.glossaryid,
-                        ADDON_MOD_GLOSSARY_MODNAME,
+                        response.entry.thglossaryid,
+                        ADDON_MOD_TH_GLOSSARY_MODNAME,
                         { siteId, readingStrategy: CoreSitesReadingStrategy.PREFER_CACHE },
                     );
 
                     await CoreNavigator.navigateToSitePath(
-                        `${ADDON_MOD_GLOSSARY_PAGE_NAME}/entry/${entryId}`,
+                        `${ADDON_MOD_TH_GLOSSARY_PAGE_NAME}/entry/${entryId}`,
                         {
                             siteId,
                             params: {
@@ -67,7 +67,7 @@ export class AddonModGlossaryEntryLinkHandlerService extends CoreContentLinksHan
                         },
                     );
                 } catch (error) {
-                    CoreAlerts.showError(error, { default: Translate.instant('addon.mod_glossary.errorloadingentry') });
+                    CoreAlerts.showError(error, { default: Translate.instant('addon.mod_thglossary.errorloadingentry') });
                 } finally {
                     modal.dismiss();
                 }
@@ -77,4 +77,4 @@ export class AddonModGlossaryEntryLinkHandlerService extends CoreContentLinksHan
 
 }
 
-export const AddonModGlossaryEntryLinkHandler = makeSingleton(AddonModGlossaryEntryLinkHandlerService);
+export const AddonModThGlossaryEntryLinkHandler = makeSingleton(AddonModThGlossaryEntryLinkHandlerService);

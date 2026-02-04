@@ -14,18 +14,18 @@
 
 import { CORE_COURSE_MODULE_FEATURE_PREFIX } from '@features/course/constants';
 
-export const ADDON_MOD_GLOSSARY_COMPONENT = 'AddonModGlossary';
-export const ADDON_MOD_GLOSSARY_COMPONENT_LEGACY = 'mmaModGlossary';
-export const ADDON_MOD_GLOSSARY_PAGE_NAME = 'mod_glossary';
-export const ADDON_MOD_GLOSSARY_MODNAME = 'glossary';
+export const ADDON_MOD_TH_GLOSSARY_COMPONENT = 'AddonModThGlossary';
+export const ADDON_MOD_TH_GLOSSARY_COMPONENT_LEGACY = 'mmaModThGlossary';
+export const ADDON_MOD_TH_GLOSSARY_PAGE_NAME = 'mod_thglossary';
+export const ADDON_MOD_TH_GLOSSARY_MODNAME = 'thglossary';
 
-export const ADDON_MOD_GLOSSARY_FEATURE_NAME = CORE_COURSE_MODULE_FEATURE_PREFIX + ADDON_MOD_GLOSSARY_COMPONENT;
+export const ADDON_MOD_TH_GLOSSARY_FEATURE_NAME = CORE_COURSE_MODULE_FEATURE_PREFIX + ADDON_MOD_TH_GLOSSARY_COMPONENT;
 
 // Events.
-export const GLOSSARY_AUTO_SYNCED = 'addon_mod_glossary_auto_synced';
-export const ADDON_MOD_GLOSSARY_ENTRY_ADDED = 'addon_mod_glossary_entry_added';
-export const ADDON_MOD_GLOSSARY_ENTRY_UPDATED = 'addon_mod_glossary_entry_updated';
-export const ADDON_MOD_GLOSSARY_ENTRY_DELETED = 'addon_mod_glossary_entry_deleted';
+export const GLOSSARY_AUTO_SYNCED = 'addon_mod_thglossary_auto_synced';
+export const ADDON_MOD_TH_GLOSSARY_ENTRY_ADDED = 'addon_mod_thglossary_entry_added';
+export const ADDON_MOD_TH_GLOSSARY_ENTRY_UPDATED = 'addon_mod_thglossary_entry_updated';
+export const ADDON_MOD_TH_GLOSSARY_ENTRY_DELETED = 'addon_mod_thglossary_entry_deleted';
 
-export const ADDON_MOD_GLOSSARY_LIMIT_ENTRIES = 25;
-export const ADDON_MOD_GLOSSARY_LIMIT_CATEGORIES = 10;
+export const ADDON_MOD_TH_GLOSSARY_LIMIT_ENTRIES = 25;
+export const ADDON_MOD_TH_GLOSSARY_LIMIT_CATEGORIES = 10;

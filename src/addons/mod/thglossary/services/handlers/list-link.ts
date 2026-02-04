@@ -15,20 +15,20 @@
 import { Injectable } from '@angular/core';
 import { CoreContentLinksModuleListHandler } from '@features/contentlinks/classes/module-list-handler';
 import { makeSingleton } from '@singletons';
-import { ADDON_MOD_GLOSSARY_COMPONENT, ADDON_MOD_GLOSSARY_MODNAME } from '../../constants';
+import { ADDON_MOD_TH_GLOSSARY_COMPONENT, ADDON_MOD_TH_GLOSSARY_MODNAME } from '../../constants';
 
 /**
  * Handler to treat links to glossary list page.
  */
 @Injectable({ providedIn: 'root' })
-export class AddonModGlossaryListLinkHandlerService extends CoreContentLinksModuleListHandler {
+export class AddonModThGlossaryListLinkHandlerService extends CoreContentLinksModuleListHandler {
 
-    name = 'AddonModGlossaryListLinkHandler';
+    name = 'AddonModThGlossaryListLinkHandler';
 
     constructor() {
-        super(ADDON_MOD_GLOSSARY_COMPONENT, ADDON_MOD_GLOSSARY_MODNAME);
+        super(ADDON_MOD_TH_GLOSSARY_COMPONENT, ADDON_MOD_TH_GLOSSARY_MODNAME);
     }
 
 }
 
-export const AddonModGlossaryListLinkHandler = makeSingleton(AddonModGlossaryListLinkHandlerService);
+export const AddonModThGlossaryListLinkHandler = makeSingleton(AddonModThGlossaryListLinkHandlerService);

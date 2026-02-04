@@ -19,7 +19,7 @@ import { CoreCourse } from '@features/course/services/course';
 import { CoreNavigator } from '@services/navigator';
 import { CoreSitesReadingStrategy } from '@services/sites';
 import { makeSingleton, Translate } from '@singletons';
-import { ADDON_MOD_GLOSSARY_FEATURE_NAME, ADDON_MOD_GLOSSARY_PAGE_NAME } from '../../constants';
+import { ADDON_MOD_TH_GLOSSARY_FEATURE_NAME, ADDON_MOD_TH_GLOSSARY_PAGE_NAME } from '../../constants';
 import { CoreLoadings } from '@services/overlays/loadings';
 import { CoreAlerts } from '@services/overlays/alerts';
 
@@ -29,11 +29,11 @@ import { CoreAlerts } from '@services/overlays/alerts';
  * Currently it only supports new entry.
  */
 @Injectable({ providedIn: 'root' })
-export class AddonModGlossaryEditLinkHandlerService extends CoreContentLinksHandlerBase {
+export class AddonModThGlossaryEditLinkHandlerService extends CoreContentLinksHandlerBase {
 
-    name = 'AddonModGlossaryEditLinkHandler';
-    featureName = ADDON_MOD_GLOSSARY_FEATURE_NAME;
-    pattern = /\/mod\/glossary\/edit\.php.*([?&](cmid)=\d+)/;
+    name = 'AddonModThGlossaryEditLinkHandler';
+    featureName = ADDON_MOD_TH_GLOSSARY_FEATURE_NAME;
+    pattern = /\/mod\/thglossary\/edit\.php.*([?&](cmid)=\d+)/;
 
     /**
      * @inheritdoc
@@ -52,11 +52,11 @@ export class AddonModGlossaryEditLinkHandlerService extends CoreContentLinksHand
                     );
 
                     await CoreNavigator.navigateToSitePath(
-                        `${ADDON_MOD_GLOSSARY_PAGE_NAME}/${module.course}/${module.id}/entry/new`,
+                        `${ADDON_MOD_TH_GLOSSARY_PAGE_NAME}/${module.course}/${module.id}/entry/new`,
                         { siteId },
                     );
                 } catch (error) {
-                    CoreAlerts.showError(error, { default: Translate.instant('addon.mod_glossary.errorloadingglossary') });
+                    CoreAlerts.showError(error, { default: Translate.instant('addon.mod_thglossary.errorloadingglossary') });
                 } finally {
                     // Just in case. In fact we need to dismiss the modal before showing a toast or error message.
                     modal.dismiss();
@@ -74,4 +74,4 @@ export class AddonModGlossaryEditLinkHandlerService extends CoreContentLinksHand
 
 }
 
-export const AddonModGlossaryEditLinkHandler = makeSingleton(AddonModGlossaryEditLinkHandlerService);
+export const AddonModThGlossaryEditLinkHandler = makeSingleton(AddonModThGlossaryEditLinkHandlerService);

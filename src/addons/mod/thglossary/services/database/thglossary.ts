@@ -15,11 +15,11 @@
 import { CoreSiteSchema } from '@services/sites';
 
 /**
- * Database variables for AddonModGlossaryProvider.
+ * Database variables for AddonModThGlossaryProvider.
  */
-export const ENTRIES_TABLE_NAME = 'addon_mod_glossary_entry_glossaryid';
+export const ENTRIES_TABLE_NAME = 'addon_mod_thglossary_entry_thglossaryid';
 export const SITE_SCHEMA: CoreSiteSchema = {
-    name: 'AddonModGlossaryProvider',
+    name: 'AddonModThGlossaryProvider',
     version: 1,
     tables: [
         {
@@ -31,7 +31,7 @@ export const SITE_SCHEMA: CoreSiteSchema = {
                     primaryKey: true,
                 },
                 {
-                    name: 'glossaryid',
+                    name: 'thglossaryid',
                     type: 'INTEGER',
                 },
                 {
@@ -44,18 +44,18 @@ export const SITE_SCHEMA: CoreSiteSchema = {
 };
 
 /**
- * Database variables for AddonModGlossaryOfflineProvider.
+ * Database variables for AddonModThGlossaryOfflineProvider.
  */
-export const OFFLINE_ENTRIES_TABLE_NAME = 'addon_mod_glossary_entrues';
+export const OFFLINE_ENTRIES_TABLE_NAME = 'addon_mod_thglossary_entrues';
 export const OFFLINE_SITE_SCHEMA: CoreSiteSchema = {
-    name: 'AddonModGlossaryOfflineProvider',
+    name: 'AddonModThGlossaryOfflineProvider',
     version: 1,
     tables: [
         {
             name: OFFLINE_ENTRIES_TABLE_NAME,
             columns: [
                 {
-                    name: 'glossaryid',
+                    name: 'thglossaryid',
                     type: 'INTEGER',
                 },
                 {
@@ -91,25 +91,25 @@ export const OFFLINE_SITE_SCHEMA: CoreSiteSchema = {
                     type: 'TEXT',
                 },
             ],
-            primaryKeys: ['glossaryid', 'concept', 'timecreated'],
+            primaryKeys: ['thglossaryid', 'concept', 'timecreated'],
         },
     ],
 };
 
 /**
- * Glossary entry to get glossaryid from entryid.
+ * Glossary entry to get thglossaryid from entryid.
  */
-export type AddonModGlossaryEntryDBRecord = {
+export type AddonModThGlossaryEntryDBRecord = {
     entryid: number;
-    glossaryid: number;
+    thglossaryid: number;
     pagefrom: number;
 };
 
 /**
  * Glossary offline entry.
  */
-export type AddonModGlossaryOfflineEntryDBRecord = {
-    glossaryid: number;
+export type AddonModThGlossaryOfflineEntryDBRecord = {
+    thglossaryid: number;
     courseid: number;
     concept: string;
     definition: string;

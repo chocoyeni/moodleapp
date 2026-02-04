@@ -16,18 +16,18 @@ import { Injectable, Type } from '@angular/core';
 import { CoreModuleHandlerBase } from '@features/course/classes/module-base-handler';
 import { CoreCourseModuleHandler } from '@features/course/services/module-delegate';
 import { makeSingleton } from '@singletons';
-import { ADDON_MOD_GLOSSARY_MODNAME, ADDON_MOD_GLOSSARY_PAGE_NAME } from '../../constants';
+import { ADDON_MOD_TH_GLOSSARY_MODNAME, ADDON_MOD_TH_GLOSSARY_PAGE_NAME } from '../../constants';
 import { ModFeature, ModPurpose } from '@addons/mod/constants';
 
 /**
  * Handler to support glossary modules.
  */
 @Injectable({ providedIn: 'root' })
-export class AddonModGlossaryModuleHandlerService extends CoreModuleHandlerBase implements CoreCourseModuleHandler {
+export class AddonModThGlossaryModuleHandlerService extends CoreModuleHandlerBase implements CoreCourseModuleHandler {
 
-    name = 'AddonModGlossary';
-    modName = ADDON_MOD_GLOSSARY_MODNAME;
-    protected pageName = ADDON_MOD_GLOSSARY_PAGE_NAME;
+    name = 'AddonModThGlossary';
+    modName = ADDON_MOD_TH_GLOSSARY_MODNAME;
+    protected pageName = ADDON_MOD_TH_GLOSSARY_PAGE_NAME;
 
     supportedFeatures = {
         [ModFeature.GROUPS]: false,
@@ -48,9 +48,9 @@ export class AddonModGlossaryModuleHandlerService extends CoreModuleHandlerBase 
      * @inheritdoc
      */
     async getMainComponent(): Promise<Type<unknown>> {
-        const { AddonModGlossaryIndexComponent } = await import('../../components/index');
+        const { AddonModThGlossaryIndexComponent } = await import('../../components/index/index');
 
-        return AddonModGlossaryIndexComponent;
+        return AddonModThGlossaryIndexComponent;
     }
 
     /**
@@ -62,4 +62,4 @@ export class AddonModGlossaryModuleHandlerService extends CoreModuleHandlerBase 
 
 }
 
-export const AddonModGlossaryModuleHandler = makeSingleton(AddonModGlossaryModuleHandlerService);
+export const AddonModThGlossaryModuleHandler = makeSingleton(AddonModThGlossaryModuleHandlerService);
