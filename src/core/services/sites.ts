@@ -70,6 +70,8 @@ import { CorePromiseUtils } from '@singletons/promise-utils';
 import { CoreOpener } from '@singletons/opener';
 import { CoreAlerts } from './overlays/alerts';
 import { CoreErrorLogs } from '@singletons/error-logs';
+import { NavController } from '@ionic/angular/common';
+import { Device } from '@awesome-cordova-plugins/device/ngx';
 
 export const CORE_SITE_SCHEMAS = new InjectionToken<CoreSiteSchema[]>('CORE_SITE_SCHEMAS');
 export const CORE_SITE_CURRENT_SITE_ID_CONFIG = 'current_site_id';
@@ -341,7 +343,7 @@ export class CoreSitesProvider {
 
     protected logger = CoreLogger.getInstance('CoreSitesProvider');
     protected sessionRestored = false;
-    protected currentSite?: CoreSite;
+    currentSite?: CoreSite;
     protected sites: { [s: string]: CoreSite } = {};
     protected logoutPromise?: CorePromisedValue<void>;
 
@@ -354,7 +356,9 @@ export class CoreSitesProvider {
     protected afterLoginNavigationQueueRunner = new CoreQueueRunner(1, true);
 
     // eslint-disable-next-line @angular-eslint/prefer-inject
-    constructor(@Optional() @Inject(CORE_SITE_SCHEMAS) siteSchemas: CoreSiteSchema[][] | null) {
+    courses: {} | undefined;
+
+    constructor(@Optional() @Inject(CORE_SITE_SCHEMAS) siteSchemas: CoreSiteSchema[][] | null, private device: Device, private nav:NavController) {
         // @todo: Inject CORE_SITE_SCHEMAS here will make CoreSites Singleton will provoke an error in the tests.
         // Some clues to solve this:
         // - Use TestBed injector on setSingletonsInjector test setup. It will need to change when configureTestingModule is called.
@@ -1660,6 +1664,35 @@ export class CoreSitesProvider {
 
         return Promise.all(siteIds.map((siteId) => this.getSite(siteId)));
     }
+     /**
+    * TH_edit
+    */
+
+    savelogininfotosite(): void {
+        var uuid = '';
+        if (this.device.uuid) {
+            uuid = this.device.uuid;
+        }
+
+        this.getSite().then((site) => {
+            const userId = site.getUserId();
+            var data: any = {
+                userid: userId,
+                uuid: uuid,
+                loginstatus: 1,
+            };
+
+            const preSets = {
+                getFromCache: false,
+            };
+
+            site.write('local_th_managelogin_save_userinfo', data, preSets).then((courses) => {
+                console.log(courses)
+            }).catch((e) => {
+            });
+        }).catch((e) => {
+        });
+    }
 
     /**
      * Login the user in a site.
@@ -1670,6 +1703,43 @@ export class CoreSitesProvider {
         await CoreConfig.set(CORE_SITE_CURRENT_SITE_ID_CONFIG, siteId);
 
         CoreEvents.trigger(CoreEvents.LOGIN, { siteId }, siteId);
+    }
+
+      /**
+     *
+     * Logout the user.
+     *
+     * @param forceLogout If true, site will be marked as logged out, no matter the value tool_mobile_forcelogout.
+     * @return Promise resolved when the user is logged out.
+     * TH_edit
+     */
+
+    savelogoutinfotosite(): void {
+        var uuid = '';
+        if (this.device.uuid) {
+            uuid = this.device.uuid;
+        }
+
+        this.getSite().then((site) => {
+            const userId = site.getUserId();
+            var data: any = {
+                userid: userId,
+                uuid: uuid,
+                loginstatus: 0,
+            };
+
+            const preSets = {
+                getFromCache: false,
+            };
+
+            site.write('local_th_managelogin_save_userinfo', data, preSets).then((courses) => {
+                // console.log(courses,data)
+            }).catch((e) => {
+                // console.log(e)
+            });
+        }).catch((e) => {
+            // console.log(e)
+        });
     }
 
     /**
@@ -1699,6 +1769,8 @@ export class CoreSitesProvider {
      * @param options Logout options.
      */
     async internalLogout(options: InternalLogoutOptions = {}): Promise<void> {
+        // TH_edit
+        this.savelogoutinfotosite();
         if (!this.currentSite) {
             return;
         }
@@ -1722,8 +1794,44 @@ export class CoreSitesProvider {
         if (options.removeAccount) {
             await CoreSites.deleteSite(siteId);
         }
+        // CoreEvents.trigger(CoreEvents.LOGOUT, {}, siteId);
+        await this.nav.navigateForward(['login/sites'])
+    }
 
-        CoreEvents.trigger(CoreEvents.LOGOUT, {}, siteId);
+    /**
+     * TH_edit
+     */
+
+    async logout_isloggedin_valid(options: CoreSitesLogoutOptions = {}): Promise<void> {
+        if (!this.currentSite) {
+            return;
+        }
+
+        const promises: Promise<unknown>[] = [];
+        const siteConfig = this.currentSite.getStoredConfig();
+        const siteId = this.currentSite.getId();
+
+        // this.currentSite = undefined;
+
+        if (options.forceLogout || (siteConfig && siteConfig.tool_mobile_forcelogout == '1')) {
+            promises.push(this.setSiteLoggedOut(siteId));
+        }
+
+        promises.push(this.removeStoredCurrentSite());
+
+        await CorePromiseUtils.ignoreErrors(Promise.all(promises));
+
+        if (options.removeAccount) {
+            await CoreSites.deleteSite(siteId);
+        }
+
+        /**
+         * TH_edit
+         */
+
+
+        await this.nav.navigateForward(['login/sites'])
+        //CoreEvents.trigger(CoreEvents.LOGOUT, {}, siteId);
     }
 
     /**

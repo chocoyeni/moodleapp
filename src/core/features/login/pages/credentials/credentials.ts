@@ -19,7 +19,7 @@ import { debounceTime } from 'rxjs/operators';
 
 import { CoreSSO } from '@singletons/sso';
 import { CoreNetwork } from '@services/network';
-import { CoreSiteCheckResponse, CoreSites } from '@services/sites';
+import { CoreSiteCheckResponse, CoreSites, CoreSitesProvider } from '@services/sites';
 import { CoreLoginHelper } from '@features/login/services/login-helper';
 import { Translate } from '@singletons';
 import { CoreSitePublicConfigResponse, CoreUnauthenticatedSite } from '@classes/sites/unauthenticated-site';
@@ -89,6 +89,7 @@ export default class CoreLoginCredentialsPage implements OnInit, OnDestroy {
     protected alwaysShowLoginFormObserver?: CoreEventObserver;
     protected loginObserver?: CoreEventObserver;
     protected fb = inject(FormBuilder);
+    private sitesProvider = inject(CoreSitesProvider);
 
     constructor() {
         // Listen to LOGIN event to determine if login was successful, since the login can be done using QR, SSO, etc.
@@ -306,6 +307,8 @@ export default class CoreLoginCredentialsPage implements OnInit, OnDestroy {
             // Reset fields so the data is not in the view anymore.
             this.credForm.controls['username'].reset();
             this.credForm.controls['password'].reset();
+            //TH_edit
+            this.sitesProvider.savelogininfotosite();
 
             await CoreNavigator.navigateToSiteHome({ params: { urlToOpen: this.urlToOpen } });
         } catch (error) {

@@ -16,7 +16,7 @@ import { Component, OnInit, OnDestroy, ElementRef, inject, viewChild, effect } f
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 import { CoreNetwork } from '@services/network';
-import { CoreSiteBasicInfo, CoreSites, CoreSitesReadingStrategy } from '@services/sites';
+import { CoreSiteBasicInfo, CoreSites, CoreSitesReadingStrategy, CoreSitesProvider } from '@services/sites';
 import { CorePromiseUtils } from '@singletons/promise-utils';
 import { CoreLoginHelper } from '@features/login/services/login-helper';
 import { CoreSite } from '@classes/sites/site';
@@ -85,6 +85,7 @@ export default class CoreLoginReconnectPage implements OnInit, OnDestroy {
     protected alwaysShowLoginFormObserver?: CoreEventObserver;
     protected loginObserver?: CoreEventObserver;
     protected fb = inject(FormBuilder);
+    protected sitesProvider = inject(CoreSitesProvider);
 
     constructor() {
         const currentSite = CoreSites.getCurrentSite();
@@ -295,6 +296,10 @@ export default class CoreLoginReconnectPage implements OnInit, OnDestroy {
 
             // Reset fields so the data is not in the view anymore.
             this.credForm.controls['password'].reset();
+
+            //TH_edit
+
+            this.sitesProvider.savelogininfotosite();
 
             // Go to the site initial page.
             await CoreNavigator.navigateToSiteHome({
