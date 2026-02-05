@@ -17,6 +17,6 @@ import { CORE_COURSE_MODULE_FEATURE_PREFIX } from '@features/course/constants';
 export const ADDON_MOD_TH_URL_COMPONENT = 'AddonModThUrl';
 export const ADDON_MOD_TH_URL_COMPONENT_LEGACY = 'mmaModThUrl';
 export const ADDON_MOD_TH_URL_PAGE_NAME = 'mod_th_url';
-export const ADDON_MOD_TH_URL_MODNAME = 'url';
+export const ADDON_MOD_TH_URL_MODNAME = 'thurl';
 
 export const ADDON_MOD_TH_URL_FEATURE_NAME = CORE_COURSE_MODULE_FEATURE_PREFIX + ADDON_MOD_TH_URL_COMPONENT;

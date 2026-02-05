@@ -45,7 +45,7 @@ import { ModResourceDisplay } from '@addons/mod/constants';
 export class AddonModThUrlIndexComponent extends CoreCourseModuleMainResourceComponent implements OnInit {
 
     component = ADDON_MOD_TH_URL_COMPONENT_LEGACY;
-    pluginName = 'url';
+    pluginName = 'thurl';
 
     url?: string;
     embeddedUrl?: string;
