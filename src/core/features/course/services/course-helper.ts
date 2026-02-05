@@ -786,6 +786,13 @@ export class CoreCourseHelperProvider {
 
         const fixedUrl = await site.checkAndFixPluginfileURL(mainFile.fileurl);
 
+        if (mainFile.mimetype === "video/mp4") {
+            return {
+                path: fixedUrl, // Use the online URL.
+                fixedUrl,
+            };
+        }
+
         // The file system is available.
         const status = await CoreFilepool.getPackageStatus(siteId, component, componentId);
 
