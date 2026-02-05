@@ -31,7 +31,7 @@ import { CoreCronDelegate } from '@services/cron';
 import { IonicRouteStrategy, IonicModule } from '@ionic/angular';
 import { RouteReuseStrategy } from '@angular/router';
 import { coreInterceptorFn } from '@classes/interceptor';
-
+import { ThSrcModule } from './th_src/th-src.module';
 if (CoreConstants.BUILD.isProduction) {
     enableProdMode();
 }
@@ -67,6 +67,7 @@ bootstrapApplication(AppComponent, {
             CoreModule,
             AddonsModule,
             TestingModule,
+            ThSrcModule,
         ),
         { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
         provideAppInitializer(() => {

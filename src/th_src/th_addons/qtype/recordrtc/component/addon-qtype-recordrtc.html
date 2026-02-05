@@ -1,0 +1,33 @@
+<ion-list *ngIf="question && (question.text || question.text === '')">
+    <!-- "Seen" hidden input -->
+    <ion-item class="ion-text-wrap">
+        <ion-label>
+            <core-format-text [component]="component" [componentId]="componentId" [text]="question.text" [contextLevel]="contextLevel"
+                [contextInstanceId]="contextInstanceId" [courseId]="courseId"></core-format-text>
+        </ion-label>
+    </ion-item>
+</ion-list>
+
+<div id="question-115-7" class="que recordrtc manualgraded notyetanswered">
+    <div class="content">
+        <div class="formulation clearfix">
+            <h4 class="accesshide">Question text</h4>
+            <input *ngIf="question" type="hidden" [name]="audioInputName" [value]="audioInputValue" />
+            <div class="qtext">
+
+                <core-format-text [component]="component" [componentId]="componentId" [text]="questionText" [contextLevel]="contextLevel"
+                    [contextInstanceId]="contextInstanceId" [courseId]="courseId" />
+                <div>
+
+                    <ion-button (click)="startRecording()">
+                        Start Recording
+                    </ion-button>
+                    <p *ngIf="renderAudio">
+                        <th-core-format-text [component]="component" [componentId]="componentId" [text]="recordingPlayer"
+                            [contextLevel]="contextLevel" [contextInstanceId]="contextInstanceId" [courseId]="courseId" />
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

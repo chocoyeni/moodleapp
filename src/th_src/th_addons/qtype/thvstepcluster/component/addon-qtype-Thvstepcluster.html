@@ -1,0 +1,4 @@
+<ng-container *ngFor="let childQuestion of childQuestions; let i = index">
+    <core-question [question]="childQuestion" [review]="review" [preferredBehaviour]="preferredBehaviour" [attemptId]="attemptId"
+        [component]="component" [componentId]="componentId" [contextInstanceId]="contextInstanceId" />
+</ng-container>
