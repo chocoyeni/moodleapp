@@ -27,6 +27,7 @@ import { CoreFileEntry, CoreFileHelper } from '@services/file-helper';
 import { CoreUrl } from '@singletons/url';
 import { CoreUtils } from '@singletons/utils';
 import { CoreSite } from '@classes/sites/site';
+import { CoreCourseModuleContentFile } from '@features/course/services/course';
 
 type MimeTypeInfo = {
     type: string;
@@ -162,7 +163,7 @@ export class CoreMimetype {
      * @param path Alternative path that will override fileurl from file object.
      * @returns The embedded HTML string.
      */
-    static getEmbeddedHtml(file: CoreFileEntry, path?: string): string {
+    static getEmbeddedHtml(file: CoreFileEntry, path?: string, lesss?: CoreCourseModuleContentFile[]): string {
         const filename = CoreFileUtils.isFileEntry(file) ? (file as FileEntry).name : file.filename;
         const extension = !CoreFileUtils.isFileEntry(file) && file.mimetype
             ? CoreMimetype.getExtension(file.mimetype)
@@ -182,6 +183,12 @@ export class CoreMimetype {
 
             path = path ?? (CoreFileUtils.isFileEntry(file) ? CoreFile.getFileEntryURL(file) : CoreFileHelper.getFileUrl(file));
             path = path && CoreFile.convertFileSrc(path);
+             var track = ''
+            if(lesss !== undefined) {
+                lesss.slice(1).map((item)=> {
+                    return track =  track + `<track src="${item.fileurl}" kind="subtitles" srclang=${JSON.stringify(item.filename.replace('.vtt',''))} label="${JSON.stringify(item.filename.replace('.vtt',''))=== '"vie"'? 'Tiếng Việt' : 'Tiếng Anh'}" default="true">`
+                })
+            }
 
             switch (embedType) {
                 case 'image':
@@ -189,12 +196,24 @@ export class CoreMimetype {
                 case 'audio':
                 case 'video':
                     // Add videoJS class and ID because the media could use the VideoJS player.
-                    return [
-                        `<${embedType} controls title="${filename}" src="${path}" controlsList="nodownload" class="video-js" ` +
-                            `id="id_videojs_moodleapp_${CoreUtils.getUniqueId('CoreMimetypeUtils-embedded-media')}">`,
-                        `<source src="${path}" type="${mimeType}">`,
-                        `</${embedType}>`,
-                    ].join('');
+                     if(lesss !== undefined) {
+                        if(lesss.length > 1) {
+                            return [
+                                `<${embedType} controls title="${filename}" src="${path.replace('?forcedownload=1&offline=1', '')}" controlsList="nodownload" class="video-js" ` +
+                                `id="id_videojs_moodleapp_${CoreUtils.getUniqueId('CoreMimetypeUtils-embedded-media')}">`,
+                                `<source src="${path}" type="${mimeType}">`,
+                                `${track}`,
+                                `</${embedType}>`,
+                            ].join('');
+                        }else if(lesss.length == 1) {
+                            return [
+                                `<${embedType} controls title="${filename}" src="${path.replace('?forcedownload=1&offline=1', '')}" controlsList="nodownload" class="video-js" ` +
+                                `id="id_videojs_moodleapp_${CoreUtils.getUniqueId('CoreMimetypeUtils-embedded-media')}">`,
+                                `<source src="${path}" type="${mimeType}">`,
+                                `</${embedType}>`,
+                            ].join('');
+                        }
+                    }
                 default:
                     return '';
             }
