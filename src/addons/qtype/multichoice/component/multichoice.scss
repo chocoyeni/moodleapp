@@ -13,6 +13,8 @@
     .d-flex {
         display: flex !important;
     }
+     //th_edit
+        align-items: center;
 
     .answer {
         line-height: 2em;
@@ -29,5 +31,9 @@
             justify-content: space-between;
             align-items: center;
         }
+    }
+    //th_edit
+    .answer div>div.d-flex.w-auto .flex-fill * {
+        line-height: inherit !important;
     }
 }
